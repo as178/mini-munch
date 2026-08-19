@@ -1,0 +1,12 @@
+{
+  "name": "mini-munch",
+  "version": "1.0.0",
+  "description": "COMP713 Assignment 1",
+  "homepage": "https://github.com/as178/mini-munch#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/as178/mini-munch.git"
+  },
+  "license": "ISC",
+  "author": "as178"
+}
