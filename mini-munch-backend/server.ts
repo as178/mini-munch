@@ -4,10 +4,11 @@ import express, {
   type Response,
 } from "express";
 import dotenv from "dotenv";
+import { connectToDatabase } from "./config/database";
 
-// load environment variables from .env file
+// load environment variable from .env file
 dotenv.config();
-const { PORT, MONGO_URI } = process.env;
+const { PORT } = process.env;
 
 // create the express app
 const app: Application = express();
@@ -15,10 +16,8 @@ const app: Application = express();
 // configure parser middleware to handle JSON requests
 app.use(express.json());
 
-// testing route to check if the server is running
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "server is running" });
-});
+// connect to the database before starting the server
+await connectToDatabase();
 
 // start the server and listen on the specified port
 app.listen(PORT, () => {
