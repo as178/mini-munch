@@ -1,5 +1,5 @@
 import type { JSX } from "react";
 
-export function LoginPage(): JSX.Element {
+export default function LoginPage(): JSX.Element {
   return <p>Login</p>;
 }

@@ -1,5 +1,5 @@
 import type { JSX } from "react";
 
-export function StaffDashboard(): JSX.Element {
+export default function StaffDashboard(): JSX.Element {
   return <p>Staff Dashboard</p>;
 }
