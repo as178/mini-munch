@@ -6,6 +6,7 @@ import { router } from "./router.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    {/* router for pages */}
     <RouterProvider router={router} />
   </StrictMode>,
 );
