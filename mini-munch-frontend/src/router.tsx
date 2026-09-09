@@ -1,5 +1,4 @@
-import LoginPage from "./pages/Login.tsx";
-import RegisterPage from "./pages/Register.tsx";
+import TableInput from "./pages/TableInput.tsx";
 import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import StaffDashboard from "./pages/StaffDashboard.tsx";
 import { createBrowserRouter, Navigate } from "react-router";
@@ -9,15 +8,11 @@ import { createBrowserRouter, Navigate } from "react-router";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/table-input" replace />,
   },
   {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
+    path: "/table-input",
+    element: <TableInput />,
   },
   {
     path: "/customer-dashboard",
@@ -29,6 +24,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/table-input" replace />,
   },
 ]);
