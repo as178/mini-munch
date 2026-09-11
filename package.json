@@ -8,5 +8,10 @@
     "url": "git+https://github.com/as178/mini-munch.git"
   },
   "license": "ISC",
-  "author": "as178"
+  "author": "as178",
+  "scripts": {
+    "frontend": "npm --prefix mini-munch-frontend run dev",
+    "backend": "npm --prefix mini-munch-backend run dev",
+    "install-all": "npm install --prefix mini-munch-backend && npm install --prefix mini-munch-frontend"
+  }
 }
