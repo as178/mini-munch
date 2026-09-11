@@ -7,10 +7,20 @@ export type TableServiceFailureReason =
   | "TABLE_OCCUPIED"
   | "TABLE_AVAILABLE";
 
+// defined type for the failure result of table service functions
+export type TableServiceFailure = {
+  success: false;
+  reason: TableServiceFailureReason;
+};
+
+// defined type for the success result of table service functions
+export type TableServiceSuccess = {
+  success: true;
+  table: TableDocument;
+};
+
 // discriminated union for the result of table service functions
-export type TableServiceResult =
-  | { success: true; table: TableDocument } // successful result with the table document
-  | { success: false; reason: TableServiceFailureReason }; // failure result with a reason
+export type TableServiceResult = TableServiceSuccess | TableServiceFailure;
 
 /**
  * validate table number
