@@ -1,8 +1,8 @@
 import type { ErrorRequestHandler } from "express";
-import { Error } from "mongoose";
+import { Error as MongooseError } from "mongoose";
 
 // reusable application error used by services and controllers
-export class AppError extends Error {
+export class AppError extends globalThis.Error {
   public readonly statusCode: number; // HTTP status code associated with the error
   public readonly code: string; // custom error code for identifying the type of error
 
@@ -37,7 +37,7 @@ export const errorMiddleware: ErrorRequestHandler = (
   }
 
   // Mongoose schema validation error
-  if (error instanceof Error.ValidationError) {
+  if (error instanceof MongooseError.ValidationError) {
     res.status(400).json({
       code: "VALIDATION_ERROR",
       message: "Validation failed.",
@@ -51,6 +51,7 @@ export const errorMiddleware: ErrorRequestHandler = (
   }
 
   // unexpected server errors
+  console.error("Unhandled server error:", error);
   res.status(500).json({
     code: "INTERNAL_SERVER_ERROR",
     message: "An unexpected server error occurred.",

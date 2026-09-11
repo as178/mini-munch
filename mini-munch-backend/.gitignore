@@ -1,2 +1,6 @@
+# generated node_modules and dist directories
 node_modules/
+/dist/
+
+# environment variable files
 .env
