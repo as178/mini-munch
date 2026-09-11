@@ -14,6 +14,7 @@ const menuItemSchema = new Schema<MenuItem>({
     type: String,
     required: true,
     trim: true,
+    unique: true,
   },
 
   // description is a string value that represents the description of the food within the menu
