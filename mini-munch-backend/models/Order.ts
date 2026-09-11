@@ -14,7 +14,7 @@ interface OrderItem {
 
 // interface to define the structure of an order document in MongoDB
 interface Order {
-  tableNumber: Types.ObjectId; // reference to the Table document in MongoDB
+  table: Types.ObjectId; // reference to the Table document in MongoDB
   items: OrderItem[];
   total: number;
   status: OrderStatus;
@@ -60,7 +60,7 @@ const orderItemSchema = new Schema<OrderItem>(
 
 // defined schema for the order collection in MongoDB
 const orderSchema = new Schema<Order>({
-  tableNumber: {
+  table: {
     type: Schema.Types.ObjectId, // reference to the Table document in MongoDB
     ref: "Table",
     required: [true, "Table is required."],
