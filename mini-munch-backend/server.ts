@@ -1,8 +1,4 @@
-import express, {
-  type Application,
-  type Request,
-  type Response,
-} from "express";
+import express, { type Application } from "express";
 import dotenv from "dotenv";
 import { connectToDatabase } from "./config/database";
 
