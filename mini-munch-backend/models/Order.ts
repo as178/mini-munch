@@ -27,28 +27,30 @@ const orderItemSchema = new Schema<OrderItem>(
     menuItem: {
       type: Schema.Types.ObjectId, // reference to the MenuItem document in MongoDB
       ref: "MenuItem",
-      required: true,
+      required: [true, "Menu item is required."],
     },
 
     // included snapshots of the menu item name and price at the time of order creation
     name: {
       type: String,
-      required: true,
+      required: [true, "Menu item name is required."],
       trim: true,
-      unique: true,
+      minlength: [2, "Menu item name must be at least 2 characters."],
+      maxlength: [50, "Menu item name cannot exceed 50 characters."],
     },
 
     price: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, "Menu item price is required."],
+      min: [0, "Price must be greater than or equal to $0."],
     },
 
     // quantity is a number value that represents the quantity of the menu item ordered
     quantity: {
       type: Number,
-      required: true,
-      min: 1,
+      required: [true, "Quantity is required."],
+      min: [1, "Quantity must be at least 1."],
+      max: [10, "Quantity cannot exceed 10."],
     },
   },
 
@@ -61,13 +63,13 @@ const orderSchema = new Schema<Order>({
   tableNumber: {
     type: Schema.Types.ObjectId, // reference to the Table document in MongoDB
     ref: "Table",
-    required: true,
+    required: [true, "Table is required."],
   },
 
   // items is a list of all order items
   items: {
     type: [orderItemSchema],
-    required: true,
+    required: [true, "Order items are required."],
     validate: {
       validator: (items: OrderItem[]) => items.length > 0,
       message: "Order must contain at least one item.",
@@ -78,13 +80,16 @@ const orderSchema = new Schema<Order>({
   total: {
     type: Number,
     required: true,
-    min: 0,
+    min: [0, "Total cannot be negative."],
   },
 
   // status is a string value that represents the current status of the order
   status: {
     type: String,
-    enum: ORDER_STATUSES,
+    enum: {
+      values: ORDER_STATUSES,
+      message: "Status must be SUBMITTED, PREPARING, or READY.",
+    },
     default: "SUBMITTED", // default status when an order is created
     required: true,
   },

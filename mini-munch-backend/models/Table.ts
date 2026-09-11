@@ -11,16 +11,20 @@ const tableSchema = new Schema<Table>({
   // tableNumber is a unique number between 1 and 20, representing where the customer is sitting
   tableNumber: {
     type: Number,
-    required: true,
+    required: [true, "Table number is required."],
     unique: true,
-    min: 1,
-    max: 20,
+    min: [1, "Table number must be at least 1."],
+    max: [20, "Table number must be 20 or less."],
+    validate: {
+      validator: Number.isInteger,
+      message: "Table number must be a whole number.",
+    },
   },
 
   // available is a boolean value that indicates whether the table is available for customers to sit at
   available: {
     type: Boolean,
-    required: true,
+    required: [true, "Table availability is required."],
     default: true,
   },
 });

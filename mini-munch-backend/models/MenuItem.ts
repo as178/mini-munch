@@ -12,23 +12,26 @@ const menuItemSchema = new Schema<MenuItem>({
   // name is a string value that represents the name of the food within the menu
   name: {
     type: String,
-    required: true,
+    required: [true, "Menu item name is required."],
     trim: true,
     unique: true,
+    minlength: [2, "Menu item name must be at least 2 characters."],
+    maxlength: [50, "Menu item name cannot exceed 50 characters."],
   },
 
   // description is a string value that represents the description of the food within the menu
   description: {
     type: String,
-    required: true,
+    required: [true, "Menu item description is required."],
     trim: true,
+    maxlength: [150, "Menu item description cannot exceed 150 characters."],
   },
 
   // price is a number value that represents the price of the food within the menu
   price: {
     type: Number,
-    required: true,
-    min: 0,
+    required: [true, "Menu item price is required."],
+    min: [0, "Menu item price must be greater than or equal to $0."],
   },
 });
 
