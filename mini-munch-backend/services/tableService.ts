@@ -74,7 +74,7 @@ export async function occupyTable(
   const table = await TableModel.findOneAndUpdate(
     { tableNumber, available: true },
     { $set: { available: false } },
-    { new: true },
+    { returnDocument: "after" },
   );
 
   // if the table is not found or already occupied, return a failure result with the appropriate reason
@@ -109,7 +109,7 @@ export async function releaseTable(
   const table = await TableModel.findOneAndUpdate(
     { tableNumber, available: false },
     { $set: { available: true } },
-    { new: true },
+    { returnDocument: "after" },
   );
 
   // if the table is not found or already available, return a failure result with the appropriate reason
