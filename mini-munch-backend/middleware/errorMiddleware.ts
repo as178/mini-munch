@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from "express";
-import mongoose, { Error } from "mongoose";
+import { Error } from "mongoose";
 
 // reusable application error used by services and controllers
 export class AppError extends Error {

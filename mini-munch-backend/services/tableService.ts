@@ -17,12 +17,9 @@ export type TableServiceResult =
  * @param tableNumber the number of the table to validate
  * @returns true if the table number is valid, false otherwise
  */
-export function validateTableNumber(tableNumber: number): boolean {
+function validateTableNumber(tableNumber: number): boolean {
   // check if table number is a whole number and within the valid range of 1 to 20
-  if (Number.isInteger(tableNumber) && 1 < tableNumber && tableNumber < 20) {
-    return true;
-  }
-  return false;
+  return Number.isInteger(tableNumber) && 1 <= tableNumber && tableNumber <= 20;
 }
 
 /**
@@ -58,25 +55,28 @@ export async function getTable(
 export async function occupyTable(
   tableNumber: number,
 ): Promise<TableServiceResult> {
-  // validate and retrieve the table document by table number
-  const getTableResult = await getTable(tableNumber);
-
-  // return failure result if validation or retrieval of the table failed
-  if (!getTableResult.success) {
-    return getTableResult;
+  // validate the table number before updating the database
+  if (!validateTableNumber(tableNumber)) {
+    return { success: false, reason: "INVALID_TABLE_NUMBER" };
   }
 
-  // else, retrieve the table document from the successful result
-  const table = getTableResult.table;
+  // check availability and occupy the table in one atomic database operation
+  const table = await TableModel.findOneAndUpdate(
+    { tableNumber, available: true },
+    { $set: { available: false } },
+    { new: true },
+  );
 
-  // if the table is already occupied, return a failure result
-  if (!table.available) {
+  // if the table is not found or already occupied, return a failure result with the appropriate reason
+  if (!table) {
+    const existingTable = await TableModel.findOne({ tableNumber });
+
+    if (!existingTable) {
+      return { success: false, reason: "TABLE_NOT_FOUND" };
+    }
+
     return { success: false, reason: "TABLE_OCCUPIED" };
   }
-
-  // else, set the table availability to false (occupied) and save the changes to the database
-  table.available = false;
-  await table.save();
 
   // return the updated table document and a success result
   return { success: true, table };
@@ -90,25 +90,28 @@ export async function occupyTable(
 export async function releaseTable(
   tableNumber: number,
 ): Promise<TableServiceResult> {
-  // validate and retrieve the table document by table number
-  const getTableResult = await getTable(tableNumber);
-
-  // return failure result if validation or retrieval of the table failed
-  if (!getTableResult.success) {
-    return getTableResult;
+  // validate the table number before updating the database
+  if (!validateTableNumber(tableNumber)) {
+    return { success: false, reason: "INVALID_TABLE_NUMBER" };
   }
 
-  // else, retrieve the table document from the successful result
-  const table = getTableResult.table;
+  // check occupancy and release the table in one atomic database operation
+  const table = await TableModel.findOneAndUpdate(
+    { tableNumber, available: false },
+    { $set: { available: true } },
+    { new: true },
+  );
 
-  // if the table is already available, return a failure result
-  if (table.available) {
+  // if the table is not found or already available, return a failure result with the appropriate reason
+  if (!table) {
+    const existingTable = await TableModel.findOne({ tableNumber });
+
+    if (!existingTable) {
+      return { success: false, reason: "TABLE_NOT_FOUND" };
+    }
+
     return { success: false, reason: "TABLE_AVAILABLE" };
   }
-
-  // else, set the table availability to true (available) and save the changes to the database
-  table.available = true;
-  await table.save();
 
   // return the updated table document and a success result
   return { success: true, table };
