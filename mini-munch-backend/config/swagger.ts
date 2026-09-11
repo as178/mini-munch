@@ -22,7 +22,7 @@ const options: swaggerJSDoc.Options = {
   },
 
   // files (routes) containing OpenAPI annotations for Swagger specification
-  apis: ["./src/controllers/*.ts"],
+  apis: ["../routes/*.ts"],
 };
 
 export const swagger = swaggerJSDoc(options);
