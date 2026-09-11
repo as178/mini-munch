@@ -1,10 +1,13 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, type HydratedDocument } from "mongoose";
 
 // interface to define the structure of a table document in MongoDB
-interface Table {
+export interface Table {
   tableNumber: number;
   available: boolean;
 }
+
+// defined type for a table document in MongoDB
+export type TableDocument = HydratedDocument<Table>;
 
 // defined schema for the table collection in MongoDB
 const tableSchema = new Schema<Table>({
