@@ -6,6 +6,7 @@ import {
   getMenuItemController,
 } from "../controllers/menuItemController";
 
+// Express route handler; registers the table-related routes and maps them to their respective controllers
 const router = Router();
 
 /**
