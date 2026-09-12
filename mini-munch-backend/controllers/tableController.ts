@@ -38,7 +38,7 @@ const serviceFailureResponses: Record<
  * @param tableNumber table number associated with the failure
  * @returns an AppError with the corresponding HTTP status code, failure reason, and error message
  */
-function handleTableServiceFailure(
+function createTableServiceError(
   reason: TableServiceFailureReason,
   tableNumber: number,
 ): AppError {
@@ -74,7 +74,7 @@ export async function getTableController(
 
     // handle table service failure by passing an AppError to the global error middleware
     if (!tableServiceResult.success) {
-      next(handleTableServiceFailure(tableServiceResult.reason, tableNumber));
+      next(createTableServiceError(tableServiceResult.reason, tableNumber));
       return;
     }
 
@@ -114,7 +114,7 @@ export async function occupyTableController(
 
     // handle table service failure by passing an AppError to the global error middleware
     if (!tableServiceResult.success) {
-      next(handleTableServiceFailure(tableServiceResult.reason, tableNumber));
+      next(createTableServiceError(tableServiceResult.reason, tableNumber));
       return;
     }
 
@@ -156,7 +156,7 @@ export async function releaseTableController(
 
     // handle table service failure by passing an AppError to the global error middleware
     if (!tableServiceResult.success) {
-      next(handleTableServiceFailure(tableServiceResult.reason, tableNumber));
+      next(createTableServiceError(tableServiceResult.reason, tableNumber));
       return;
     }
 
