@@ -27,7 +27,7 @@ const router = Router();
  *           maximum: 20
  *     responses:
  *       200:
- *         description: Table found successfully.
+ *         description: Table was retrieved successfully.
  *       400:
  *         description: Invalid table number.
  *       404:

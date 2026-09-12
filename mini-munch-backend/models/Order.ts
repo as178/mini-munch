@@ -42,15 +42,15 @@ const orderItemSchema = new Schema<OrderItem>(
     price: {
       type: Number,
       required: [true, "Menu item price is required."],
-      min: [0, "Price must be greater than or equal to $0."],
+      min: [0, "Menu item price must be greater than or equal to $0."],
     },
 
     // quantity is a number value that represents the quantity of the menu item ordered
     quantity: {
       type: Number,
-      required: [true, "Quantity is required."],
-      min: [1, "Quantity must be at least 1."],
-      max: [10, "Quantity cannot exceed 10."],
+      required: [true, "Menu item quantity is required."],
+      min: [1, "Menu item quantity must be at least 1."],
+      max: [10, "Menu item quantity cannot exceed 10."],
     },
   },
 
