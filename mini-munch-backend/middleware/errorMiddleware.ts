@@ -28,6 +28,7 @@ export const errorMiddleware: ErrorRequestHandler = (
 ) => {
   // custom application errors thrown by services or controllers
   if (error instanceof AppError) {
+    console.error("Handled application error:", error);
     res.status(error.statusCode).json({
       code: error.code,
       message: error.message,

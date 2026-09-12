@@ -36,7 +36,7 @@ const serviceFailureResponses: Record<
  * creates an AppError for a table service failure
  * @param reason the table service failure reason
  * @param tableNumber table number associated with the failure
- * @returns an HTTP-aware application error
+ * @returns an AppError with the corresponding HTTP status code, failure reason, and error message
  */
 function handleTableServiceFailure(
   reason: TableServiceFailureReason,

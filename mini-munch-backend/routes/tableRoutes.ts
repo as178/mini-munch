@@ -5,21 +5,22 @@ import {
   releaseTableController,
 } from "../controllers/tableController";
 
+// Express route handler; registers the table-related routes and maps them to their respective controllers
 const router = Router();
 
 /**
  * @openapi
  * /api/tables/{tableNumber}:
  *   get:
- *     summary: Get a table
- *     description: Checks whether a table exists and returns its availability.
+ *     summary: Retrieve a table by its number
+ *     description: Retrieves the table document which includes the table ID, table number, and availability status, if successful.
  *     tags:
  *       - Tables
  *     parameters:
  *       - in: path
  *         name: tableNumber
  *         required: true
- *         description: The number of the table to check.
+ *         description: The number of the table to retrieve.
  *         schema:
  *           type: integer
  *           minimum: 1
@@ -40,8 +41,8 @@ router.get("/:tableNumber", getTableController);
  * @openapi
  * /api/tables/{tableNumber}/occupy:
  *   patch:
- *     summary: Occupy a table
- *     description: Marks an available table as occupied.
+ *     summary: Occupy a table by its number
+ *     description: Checks table availability and occupies the table if it is available. If successful, returns the updated table document.
  *     tags:
  *       - Tables
  *     parameters:
@@ -71,8 +72,8 @@ router.patch("/:tableNumber/occupy", occupyTableController);
  * @openapi
  * /api/tables/{tableNumber}/release:
  *   patch:
- *     summary: Release a table
- *     description: Marks an occupied table as available.
+ *     summary: Release a table from being occupied by its number
+ *     description: Checks table availability and releases the table if it is occupied. If successful, returns the updated table document.
  *     tags:
  *       - Tables
  *     parameters:
