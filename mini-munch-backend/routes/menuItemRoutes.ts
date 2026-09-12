@@ -1,4 +1,10 @@
 import { Router } from "express";
+import {
+  createMenuItemController,
+  deleteMenuItemController,
+  getAllMenuItemsController,
+  getMenuItemController,
+} from "../controllers/menuItemController";
 
 const router = Router();
 
@@ -7,20 +13,23 @@ const router = Router();
  * /api/menu:
  *   get:
  *     summary: Retrieve all menu items
+ *     description: Retrieves all menu item documents (or an empty array if no menu items exist).
  *     tags:
  *       - Menu Items
  *     responses:
  *       200:
- *         description: Menu items was retrieved successfully.
+ *         description: Menu items were retrieved successfully.
  *       500:
  *         description: Unexpected server error.
  */
+router.get("/", getAllMenuItemsController);
 
 /**
  * @openapi
  * /api/menu/{id}:
  *   get:
  *     summary: Retrieve a menu item by its ID
+ *     description: Retrieves the menu item document which includes the menu item ID, name, description, and price, if successful.
  *     tags:
  *       - Menu Items
  *     parameters:
@@ -39,12 +48,14 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.get("/:id", getMenuItemController);
 
 /**
  * @openapi
  * /api/menu:
  *   post:
  *     summary: Create a new menu item
+ *     description: Creates a new menu item document with the provided name, description, and price. If successful, returns the created menu item document.
  *     tags:
  *       - Menu Items
  *     requestBody:
@@ -79,12 +90,14 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.post("/", createMenuItemController);
 
 /**
  * @openapi
  * /api/menu/{id}:
  *   delete:
  *     summary: Delete an existing menu item
+ *     description: Deletes an existing menu item document by its ID. If successful, returns a success response with no content.
  *     tags:
  *       - Menu Items
  *     parameters:
@@ -103,5 +116,6 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.delete("/:id", deleteMenuItemController);
 
 export default router;

@@ -87,22 +87,22 @@ export async function createMenuItem(
 /**
  * deletes a menu item by its id
  * @param id of the menu item to be deleted
- * @returns a successful result with the deleted menu item document, or a failure result with a reason
+ * @returns a successful result with no content, or a failure result with a reason
  */
 export async function deleteMenuItem(
   id: string,
-): Promise<MenuItemServiceResult> {
+): Promise<MenuItemServiceFailure | { success: true }> {
   // retrieve the menu item document by its id
-  const result = await getMenuItemById(id);
+  const menuItemToBeDeleted = await getMenuItemById(id);
 
   // if the menu item does not exist, return a failed result with the appropriate reason
-  if (!result.success) {
-    return result;
+  if (!menuItemToBeDeleted.success) {
+    return menuItemToBeDeleted;
   }
 
   // delete the menu item document from the database
-  await result.menuItem.deleteOne();
+  await menuItemToBeDeleted.menuItem.deleteOne();
 
-  // return a success result with the deleted menu item document
-  return result;
+  // return a success result with no content
+  return { success: menuItemToBeDeleted.success };
 }

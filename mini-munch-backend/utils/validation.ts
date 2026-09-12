@@ -1,4 +1,5 @@
 import { AppError } from "../middleware/errorMiddleware";
+import mongoose from "mongoose";
 
 /**
  * converts a string or string array to a number, returning null if the value is not a valid number
@@ -33,4 +34,67 @@ export function parseSafeInteger(
 
   // if the value is a valid safe integer, return the number
   return numberValue;
+}
+
+/**
+ * validates a request value as a MongoDB ObjectId string
+ * @param value the value to validate
+ * @returns the valid ObjectId string, or an AppError if the value is not a valid ObjectId
+ */
+export function parseObjectId(
+  value: string | string[] | undefined,
+): string | AppError {
+  // check if the value is a string or a valid ObjectId
+  if (typeof value !== "string" || !mongoose.isObjectIdOrHexString(value)) {
+    return new AppError(400, "INVALID_OBJECT_ID", "Object ID is not valid.");
+  }
+
+  // else, return the valid ObjectId string
+  return value;
+}
+
+/**
+ * validates a required non-empty string value
+ * @param value the value to validate
+ * @param fieldName the name used in the validation error
+ * @returns the trimmed string, or an AppError if the value is invalid
+ */
+export function parseRequiredString(
+  value: unknown,
+  fieldName: string,
+): string | AppError {
+  // check if the value is a string and not empty after trimming whitespace
+  if (typeof value !== "string" || value.trim() === "") {
+    return new AppError(
+      400,
+      "INVALID_STRING",
+      `${fieldName} is required and must be a non-empty string.`,
+    );
+  }
+
+  // else, return the trimmed string value
+  return value.trim();
+}
+
+/**
+ * validates a finite numeric value
+ * @param value the value to validate
+ * @param fieldName the name used in the validation error
+ * @returns the number, or an AppError if the value is invalid
+ */
+export function parseFiniteNumber(
+  value: unknown,
+  fieldName: string,
+): number | AppError {
+  // check if the value is a number and finite
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return new AppError(
+      400,
+      "INVALID_NUMBER",
+      `${fieldName} is required and must be a number.`,
+    );
+  }
+
+  // else, return the valid number
+  return value;
 }
