@@ -1,7 +1,12 @@
 import { Schema, model, Types } from "mongoose";
 
 // defined type for the status of an order
-export const ORDER_STATUSES = ["SUBMITTED", "PREPARING", "READY"] as const;
+export const ORDER_STATUSES = [
+  "DRAFT",
+  "SUBMITTED",
+  "PREPARING",
+  "READY",
+] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 // interface to define the structure of an order item embedded document
@@ -54,7 +59,7 @@ const orderItemSchema = new Schema<OrderItem>(
     },
   },
 
-  // no automatic generation of _id for embedded documents, since orders are retrieved as a whole and not individually
+  // no automatic generation of _id for embedded documents, since order items are identified by their unique menuItem reference
   { _id: false },
 );
 
@@ -79,7 +84,7 @@ const orderSchema = new Schema<Order>({
   // total is a number value that represents the total price of the order
   total: {
     type: Number,
-    required: true,
+    required: [true, "Total is required."],
     min: [0, "Total cannot be negative."],
   },
 
@@ -88,10 +93,10 @@ const orderSchema = new Schema<Order>({
     type: String,
     enum: {
       values: ORDER_STATUSES,
-      message: "Status must be SUBMITTED, PREPARING, or READY.",
+      message: "Status must be DRAFT, SUBMITTED, PREPARING, or READY.",
     },
-    default: "SUBMITTED", // default status when an order is created
-    required: true,
+    default: "DRAFT", // default status when an order is created
+    required: [true, "Status is required."],
   },
 
   // createdAt is a date value that represents the time when the order was created
