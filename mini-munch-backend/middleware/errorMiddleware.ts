@@ -42,6 +42,8 @@ export const errorMiddleware: ErrorRequestHandler = (
     res.status(400).json({
       code: "VALIDATION_ERROR",
       message: "Validation failed.",
+      // returns an array of validation errors with the field and message for each error
+      // e.g. [{ field: "name", message: "..." }]
       errors: Object.values(error.errors).map((err) => ({
         field: err.path,
         message: err.message,
@@ -49,6 +51,24 @@ export const errorMiddleware: ErrorRequestHandler = (
     });
 
     return;
+  }
+
+  // MongoDB driver error for duplicate key (e.g. unique index violation)
+  if (error.name === "MongoServerError" && error.code === 11000) {
+    // extract the fields that caused the duplicate key error
+    const fields = Object.keys(error.keyValue || {});
+
+    return res.status(409).json({
+      code: "DUPLICATE_RESOURCE",
+      message: "A resource with those details already exists.",
+
+      // returns an array of duplicate field errors with the field and message for each error
+      // e.g. [{ field: "name", message: "Name is already used." }]
+      errors: fields.map((field) => ({
+        field: field,
+        message: `The ${field} is already used.`,
+      })),
+    });
   }
 
   // unexpected server errors
