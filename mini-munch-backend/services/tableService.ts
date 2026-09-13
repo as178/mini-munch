@@ -1,4 +1,4 @@
-import { tableServiceErrors } from "../errors/tableServiceErrors";
+import { tableServiceErrors } from "../errors/tableErrors";
 import { TableModel, type TableDocument } from "../models/Table";
 
 // defined type for the reasons a table service function can fail

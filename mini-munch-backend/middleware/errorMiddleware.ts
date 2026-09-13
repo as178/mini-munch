@@ -1,5 +1,11 @@
 import type { ErrorRequestHandler } from "express";
 import { Error as MongooseError } from "mongoose";
+import type { TableServiceFailureReason } from "../services/tableService";
+import type { MenuItemServiceFailureReason } from "../services/menuItemService";
+import type { OrderServiceFailureReason } from "../services/orderService";
+import { tableHttpErrorResponses } from "../errors/tableErrors";
+import { menuItemHttpErrorResponses } from "../errors/menuItemErrors";
+import { orderHttpErrorResponses } from "../errors/orderErrors";
 
 // reusable application error used by services and controllers
 export class AppError extends globalThis.Error {
@@ -17,6 +23,35 @@ export class AppError extends globalThis.Error {
     this.statusCode = statusCode;
     this.code = code;
   }
+}
+
+// defined mapping of service failure reasons to HTTP status codes
+const httpErrorResponses = {
+  ...tableHttpErrorResponses,
+  ...menuItemHttpErrorResponses,
+  ...orderHttpErrorResponses,
+};
+
+// defined type for service failure reasons
+type ServiceError =
+  | TableServiceFailureReason
+  | MenuItemServiceFailureReason
+  | OrderServiceFailureReason;
+
+/**
+ * creates an AppError for a service failure
+ * @param serviceError the service failure reason
+ * @returns an AppError with the corresponding HTTP status code, failure reason, and error message
+ */
+export function createAppServiceError(serviceError: ServiceError): AppError {
+  // retrieve the corresponding HTTP status code, failure reason, and error message for the failure reason
+  const response = httpErrorResponses[serviceError.reason];
+  // create and return an AppError for the controller to pass to the global error middleware
+  return new AppError(
+    response.statusCode,
+    serviceError.reason,
+    serviceError.message,
+  );
 }
 
 // global error handling middleware

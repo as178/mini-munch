@@ -1,4 +1,4 @@
-import { menuItemServiceErrors } from "../errors/menuItemServiceErrors";
+import { menuItemServiceErrors } from "../errors/menuItemErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
 
 // defined type for the reasons a menu item service function can fail

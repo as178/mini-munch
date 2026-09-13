@@ -1,3 +1,5 @@
+import type { TableServiceFailureReason } from "../services/tableService";
+
 // defined service failure reasons and messages for table service functions
 export const tableServiceErrors = {
   INVALID_TABLE_NUMBER: {
@@ -18,3 +20,14 @@ export const tableServiceErrors = {
     message: "Table is already available.",
   },
 } as const;
+
+// defined mapping of table service failure reasons to HTTP status codes
+export const tableHttpErrorResponses: Record<
+  TableServiceFailureReason["reason"],
+  { statusCode: number }
+> = {
+  INVALID_TABLE_NUMBER: { statusCode: 400 },
+  TABLE_NOT_FOUND: { statusCode: 404 },
+  TABLE_OCCUPIED: { statusCode: 409 },
+  TABLE_AVAILABLE: { statusCode: 409 },
+};

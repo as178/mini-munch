@@ -1,3 +1,5 @@
+import type { OrderServiceFailureReason } from "../services/orderService";
+
 // defined service failure reasons and messages for order service functions
 export const orderServiceErrors = {
   INVALID_QUANTITY: {
@@ -45,3 +47,21 @@ export const orderServiceErrors = {
     message: "The menu item is not in this order.",
   },
 } as const;
+
+// defined mapping of order service failure reasons to HTTP status codes
+export const orderHttpErrorResponses: Record<
+  OrderServiceFailureReason["reason"],
+  { statusCode: number }
+> = {
+  INVALID_QUANTITY: { statusCode: 400 },
+  INVALID_STATUS: { statusCode: 400 },
+  TABLE_NOT_OCCUPIED: { statusCode: 409 },
+  ORDER_ALREADY_EXISTS: { statusCode: 409 },
+  ORDER_NOT_FOUND: { statusCode: 404 },
+  ORDER_ITEM_ALREADY_EXISTS: { statusCode: 409 },
+  ORDER_NOT_DRAFT: { statusCode: 409 },
+  ORDER_NOT_READY: { statusCode: 409 },
+  INVALID_STATUS_TRANSITION: { statusCode: 409 },
+  ORDER_HAS_NO_ITEMS: { statusCode: 409 },
+  ORDER_ITEM_NOT_FOUND: { statusCode: 404 },
+};

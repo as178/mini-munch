@@ -1,4 +1,4 @@
-import { orderServiceErrors } from "../errors/orderServiceErrors";
+import { orderServiceErrors } from "../errors/orderErrors";
 import {
   OrderModel,
   type OrderDocument,

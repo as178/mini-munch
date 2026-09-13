@@ -1,45 +1,16 @@
 import type { NextFunction, Request, Response } from "express";
-import { AppError } from "../middleware/errorMiddleware";
+import { AppError, createAppServiceError } from "../middleware/errorMiddleware";
 import {
   createMenuItem,
   deleteMenuItem,
   getAllMenuItems,
   getMenuItemById,
-  type MenuItemServiceFailureReason,
 } from "../services/menuItemService";
 import {
   parseFiniteNumber,
   parseObjectId,
   parseRequiredString,
 } from "../utils/validation";
-
-// defined mapping of menu item service failure reasons to HTTP status codes
-const menuItemFailureResponses: Record<
-  MenuItemServiceFailureReason["reason"],
-  { statusCode: number }
-> = {
-  MENU_ITEM_NOT_FOUND: { statusCode: 404 },
-  MENU_ITEM_ALREADY_EXISTS: { statusCode: 409 },
-};
-
-/**
- * creates an AppError for a menu item service failure
- * @param reason the menu item service failure reason
- * @param name of the menu item associated with the failure
- * @returns an AppError with the corresponding HTTP status code, failure reason, and error message
- */
-function createMenuItemServiceError(
-  serviceError: MenuItemServiceFailureReason,
-): AppError {
-  // retrieve the corresponding HTTP status code, failure reason, and error message for the failure reason
-  const response = menuItemFailureResponses[serviceError.reason];
-  // create and return an AppError for the controller to pass to the global error middleware
-  return new AppError(
-    response.statusCode,
-    serviceError.reason,
-    serviceError.message,
-  );
-}
 
 /**
  * GET /api/menu
@@ -83,7 +54,7 @@ export async function getMenuItemController(
 
     // handle menu item service failure by passing an AppError to the global error middleware
     if (!menuItemServiceResult.success) {
-      next(createMenuItemServiceError(menuItemServiceResult.serviceError));
+      next(createAppServiceError(menuItemServiceResult.serviceError));
       return;
     }
 
@@ -134,7 +105,7 @@ export async function createMenuItemController(
 
     // handle menu item service failure by passing an AppError to the global error middleware
     if (!menuItemServiceResult.success) {
-      next(createMenuItemServiceError(menuItemServiceResult.serviceError));
+      next(createAppServiceError(menuItemServiceResult.serviceError));
       return;
     }
 
@@ -168,7 +139,7 @@ export async function deleteMenuItemController(
 
     // handle menu item service failure by passing an AppError to the global error middleware
     if (!menuItemServiceResult.success) {
-      next(createMenuItemServiceError(menuItemServiceResult.serviceError));
+      next(createAppServiceError(menuItemServiceResult.serviceError));
       return;
     }
 
