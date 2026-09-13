@@ -1,3 +1,4 @@
+import { orderServiceErrors } from "../errors/orderServiceErrors";
 import {
   OrderModel,
   type OrderDocument,
@@ -12,22 +13,12 @@ import { getTable, type TableServiceFailure } from "./tableService";
 
 // defined type for the reasons an order service function can fail
 export type OrderServiceFailureReason =
-  | "INVALID_QUANTITY"
-  | "INVALID_STATUS"
-  | "TABLE_NOT_OCCUPIED"
-  | "ORDER_ALREADY_EXISTS"
-  | "ORDER_NOT_FOUND"
-  | "ORDER_ITEM_ALREADY_EXISTS"
-  | "ORDER_NOT_DRAFT"
-  | "ORDER_NOT_READY"
-  | "INVALID_STATUS_TRANSITION"
-  | "ORDER_HAS_NO_ITEMS"
-  | "ORDER_ITEM_NOT_FOUND";
+  (typeof orderServiceErrors)[keyof typeof orderServiceErrors];
 
 // defined type for the failure result of order service functions
 export type OrderServiceFailure = {
   success: false;
-  reason: OrderServiceFailureReason;
+  serviceError: OrderServiceFailureReason;
 };
 
 // defined type for the success result of order service functions
@@ -60,10 +51,10 @@ async function retrieveDraftOrder(
 ): Promise<OrderServiceSuccess | OrderServiceFailure> {
   const existingOrder = await OrderModel.findById(orderId);
   if (!existingOrder) {
-    return { success: false, reason: "ORDER_NOT_FOUND" };
+    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
   if (existingOrder.status !== "DRAFT") {
-    return { success: false, reason: "ORDER_NOT_DRAFT" };
+    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_DRAFT };
   }
   return { success: true, order: existingOrder };
 }
@@ -84,18 +75,24 @@ export async function createOrder(
 
   // if the table is available, return a failure result with the appropriate reason
   if (tableServiceResult.table.available) {
-    return { success: false, reason: "TABLE_NOT_OCCUPIED" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.TABLE_NOT_OCCUPIED,
+    };
   }
 
   // if the occupied table already has an order, do not make a new order and return a failure result with the appropriate reason
   // (concurrent requests to create an order for the same table will be handled by the unique index constraint in the schema)
   const existingOrderResult = await getOrderByTable(tableNumber);
   if (existingOrderResult.success) {
-    return { success: false, reason: "ORDER_ALREADY_EXISTS" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.ORDER_ALREADY_EXISTS,
+    };
   }
 
   // else, if the occupied table does not have an order
-  if (existingOrderResult.reason === "ORDER_NOT_FOUND") {
+  if (existingOrderResult.serviceError === orderServiceErrors.ORDER_NOT_FOUND) {
     // create a new order document with DRAFT status for the occupied table
     const order = await OrderModel.create({
       table: tableServiceResult.table._id,
@@ -133,7 +130,7 @@ export async function getOrderByTable(
 
   // if the order does not exist, return a failed result
   if (!order) {
-    return { success: false, reason: "ORDER_NOT_FOUND" };
+    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
 
   // else, return a success result with the found order document
@@ -167,7 +164,10 @@ export async function addOrderItem(
     item.menuItem.equals(menuItemId),
   );
   if (existingItem) {
-    return { success: false, reason: "ORDER_ITEM_ALREADY_EXISTS" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.ORDER_ITEM_ALREADY_EXISTS,
+    };
   }
 
   // else, add the menu item to the order with a quantity of 1 and store its current details as a snapshot
@@ -198,7 +198,10 @@ export async function updateOrderItem(
 ): Promise<OrderServiceResult> {
   // if quantity is invalid, return a failure result with the appropriate reason
   if (!Number.isInteger(quantity) || 1 > quantity || quantity > 10) {
-    return { success: false, reason: "INVALID_QUANTITY" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.INVALID_QUANTITY,
+    };
   }
 
   // retrieve the order document by its id, return a failure result if the order does not exist or is not in DRAFT status
@@ -212,7 +215,10 @@ export async function updateOrderItem(
     item.menuItem.equals(menuItemId),
   );
   if (!orderItem) {
-    return { success: false, reason: "ORDER_ITEM_NOT_FOUND" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.ORDER_ITEM_NOT_FOUND,
+    };
   }
 
   // update the order item's quantity, recalculate the order total, save and return a successful result with the updated order
@@ -244,7 +250,10 @@ export async function removeOrderItem(
     (item) => !item.menuItem.equals(menuItemId),
   );
   if (existingOrder.order.items.length === originalLength) {
-    return { success: false, reason: "ORDER_ITEM_NOT_FOUND" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.ORDER_ITEM_NOT_FOUND,
+    };
   }
 
   // recalculate the order total, save and return a successful result with the updated order
@@ -266,7 +275,7 @@ export async function updateOrderStatus(
   // if the order does not exist, return a failure result with the appropriate reason
   const existingOrder = await OrderModel.findById(orderId);
   if (!existingOrder) {
-    return { success: false, reason: "ORDER_NOT_FOUND" };
+    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
 
   // if the requested status is not a valid transition from the current status, return a failure result with the appropriate reason
@@ -275,12 +284,18 @@ export async function updateOrderStatus(
     (existingOrder.status === "SUBMITTED" && status === "PREPARING") ||
     (existingOrder.status === "PREPARING" && status === "READY");
   if (!validTransition) {
-    return { success: false, reason: "INVALID_STATUS_TRANSITION" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.INVALID_STATUS_TRANSITION,
+    };
   }
 
   // if the order is being submitted but has no items, return a failure result with the appropriate reason
   if (status === "SUBMITTED" && existingOrder.items.length === 0) {
-    return { success: false, reason: "ORDER_HAS_NO_ITEMS" };
+    return {
+      success: false,
+      serviceError: orderServiceErrors.ORDER_HAS_NO_ITEMS,
+    };
   }
 
   // update the order status, save and return a successful result with the updated order
@@ -314,12 +329,12 @@ export async function deleteOrder(
   // if the order does not exist, return a failure result with the appropriate reason
   const existingOrder = await OrderModel.findById(orderId);
   if (!existingOrder) {
-    return { success: false, reason: "ORDER_NOT_FOUND" };
+    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
 
   // if the order is not in READY status, return a failure result with the appropriate reason
   if (existingOrder.status !== "READY") {
-    return { success: false, reason: "ORDER_NOT_READY" };
+    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_READY };
   }
 
   // delete the order and return a successful result with no content
