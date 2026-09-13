@@ -1,16 +1,14 @@
+import { tableServiceErrors } from "../errors/tableServiceErrors";
 import { TableModel, type TableDocument } from "../models/Table";
 
 // defined type for the reasons a table service function can fail
 export type TableServiceFailureReason =
-  | "INVALID_TABLE_NUMBER"
-  | "TABLE_NOT_FOUND"
-  | "TABLE_OCCUPIED"
-  | "TABLE_AVAILABLE";
+  (typeof tableServiceErrors)[keyof typeof tableServiceErrors];
 
 // defined type for the failure result of table service functions
 export type TableServiceFailure = {
   success: false;
-  reason: TableServiceFailureReason;
+  serviceError: TableServiceFailureReason;
 };
 
 // defined type for the success result of table service functions
@@ -42,7 +40,10 @@ export async function getTable(
 ): Promise<TableServiceResult> {
   // validate the table number before querying the database
   if (!validateTableNumber(tableNumber)) {
-    return { success: false, reason: "INVALID_TABLE_NUMBER" };
+    return {
+      success: false,
+      serviceError: tableServiceErrors.INVALID_TABLE_NUMBER,
+    };
   }
 
   // find the table document in the database by table number
@@ -50,7 +51,7 @@ export async function getTable(
 
   // if the table does not exist, return a failed result
   if (!table) {
-    return { success: false, reason: "TABLE_NOT_FOUND" };
+    return { success: false, serviceError: tableServiceErrors.TABLE_NOT_FOUND };
   }
 
   // else, return a success result with the found table document
@@ -67,7 +68,10 @@ export async function occupyTable(
 ): Promise<TableServiceResult> {
   // validate the table number before updating the database
   if (!validateTableNumber(tableNumber)) {
-    return { success: false, reason: "INVALID_TABLE_NUMBER" };
+    return {
+      success: false,
+      serviceError: tableServiceErrors.INVALID_TABLE_NUMBER,
+    };
   }
 
   // check availability and occupy the table in one atomic database operation
@@ -82,10 +86,13 @@ export async function occupyTable(
     const existingTable = await TableModel.findOne({ tableNumber });
 
     if (!existingTable) {
-      return { success: false, reason: "TABLE_NOT_FOUND" };
+      return {
+        success: false,
+        serviceError: tableServiceErrors.TABLE_NOT_FOUND,
+      };
     }
 
-    return { success: false, reason: "TABLE_OCCUPIED" };
+    return { success: false, serviceError: tableServiceErrors.TABLE_OCCUPIED };
   }
 
   // return the updated table document and a success result
@@ -102,7 +109,10 @@ export async function releaseTable(
 ): Promise<TableServiceResult> {
   // validate the table number before updating the database
   if (!validateTableNumber(tableNumber)) {
-    return { success: false, reason: "INVALID_TABLE_NUMBER" };
+    return {
+      success: false,
+      serviceError: tableServiceErrors.INVALID_TABLE_NUMBER,
+    };
   }
 
   // check occupancy and release the table in one atomic database operation
@@ -117,10 +127,13 @@ export async function releaseTable(
     const existingTable = await TableModel.findOne({ tableNumber });
 
     if (!existingTable) {
-      return { success: false, reason: "TABLE_NOT_FOUND" };
+      return {
+        success: false,
+        serviceError: tableServiceErrors.TABLE_NOT_FOUND,
+      };
     }
 
-    return { success: false, reason: "TABLE_AVAILABLE" };
+    return { success: false, serviceError: tableServiceErrors.TABLE_AVAILABLE };
   }
 
   // return the updated table document and a success result

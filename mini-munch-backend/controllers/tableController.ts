@@ -8,28 +8,15 @@ import {
 } from "../services/tableService";
 import { parseSafeInteger } from "../utils/validation";
 
-// defined mapping of table service failure reasons to HTTP status codes and error messages
+// defined mapping of table service failure reasons to HTTP status codes
 const tableFailureResponses: Record<
-  TableServiceFailureReason,
-  { statusCode: number; message: (tableNumber: number) => string }
+  TableServiceFailureReason["reason"],
+  { statusCode: number }
 > = {
-  INVALID_TABLE_NUMBER: {
-    statusCode: 400,
-    message: () =>
-      "Table number must be a whole number between 1 and 20 (inclusive).",
-  },
-  TABLE_NOT_FOUND: {
-    statusCode: 404,
-    message: (tableNumber) => `Table ${tableNumber} does not exist.`,
-  },
-  TABLE_OCCUPIED: {
-    statusCode: 409,
-    message: (tableNumber) => `Table ${tableNumber} is already occupied.`,
-  },
-  TABLE_AVAILABLE: {
-    statusCode: 409,
-    message: (tableNumber) => `Table ${tableNumber} is already available.`,
-  },
+  INVALID_TABLE_NUMBER: { statusCode: 400 },
+  TABLE_NOT_FOUND: { statusCode: 404 },
+  TABLE_OCCUPIED: { statusCode: 409 },
+  TABLE_AVAILABLE: { statusCode: 409 },
 };
 
 /**
@@ -39,16 +26,15 @@ const tableFailureResponses: Record<
  * @returns an AppError with the corresponding HTTP status code, failure reason, and error message
  */
 function createTableServiceError(
-  reason: TableServiceFailureReason,
-  tableNumber: number,
+  serviceError: TableServiceFailureReason,
 ): AppError {
-  // retrieve the corresponding HTTP status code and error message for the failure reason
-  const response = tableFailureResponses[reason];
+  // retrieve the corresponding HTTP status code, failure reason, and error message for the failure reason
+  const response = tableFailureResponses[serviceError.reason];
   // create and return an AppError for the controller to pass to the global error middleware
   return new AppError(
     response.statusCode,
-    reason,
-    response.message(tableNumber),
+    serviceError.reason,
+    serviceError.message,
   );
 }
 
@@ -74,7 +60,7 @@ export async function getTableController(
 
     // handle table service failure by passing an AppError to the global error middleware
     if (!tableServiceResult.success) {
-      next(createTableServiceError(tableServiceResult.reason, tableNumber));
+      next(createTableServiceError(tableServiceResult.serviceError));
       return;
     }
 
@@ -114,7 +100,7 @@ export async function occupyTableController(
 
     // handle table service failure by passing an AppError to the global error middleware
     if (!tableServiceResult.success) {
-      next(createTableServiceError(tableServiceResult.reason, tableNumber));
+      next(createTableServiceError(tableServiceResult.serviceError));
       return;
     }
 
@@ -156,7 +142,7 @@ export async function releaseTableController(
 
     // handle table service failure by passing an AppError to the global error middleware
     if (!tableServiceResult.success) {
-      next(createTableServiceError(tableServiceResult.reason, tableNumber));
+      next(createTableServiceError(tableServiceResult.serviceError));
       return;
     }
 
