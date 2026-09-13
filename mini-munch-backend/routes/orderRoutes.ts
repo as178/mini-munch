@@ -86,23 +86,18 @@ const router = Router();
  *             type: object
  *             required:
  *               - menuItemId
- *               - quantity
  *             properties:
  *               menuItemId:
  *                 type: string
- *               quantity:
- *                 type: integer
- *                 minimum: 1
- *                 maximum: 10
  *     responses:
  *       200:
  *         description: Order item was added successfully.
  *       400:
- *         description: Invalid order data, including an invalid order ID, menu item ID, or quantity exceeding 10.
+ *         description: Invalid order ID or menu item ID.
  *       404:
  *         description: Order or menu item does not exist.
  *       409:
- *         description: Order is not in DRAFT status.
+ *         description: Order is not in DRAFT status or the item is already in the order.
  *       500:
  *         description: Unexpected server error.
  */

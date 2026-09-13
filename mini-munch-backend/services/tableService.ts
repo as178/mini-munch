@@ -27,7 +27,7 @@ export type TableServiceResult = TableServiceSuccess | TableServiceFailure;
  * @param tableNumber the number of the table to validate
  * @returns true if the table number is valid, false otherwise
  */
-function validateTableNumber(tableNumber: number): boolean {
+export function validateTableNumber(tableNumber: number): boolean {
   // check if table number is a whole number and within the valid range of 1 to 20
   return Number.isInteger(tableNumber) && 1 <= tableNumber && tableNumber <= 20;
 }
