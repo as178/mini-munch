@@ -39,6 +39,33 @@ const router = Router();
 
 /**
  * @openapi
+ * /api/orders/table/{tableNumber}:
+ *   get:
+ *     summary: Get the order for a table
+ *     description: Returns the current order for a table. Each table can have at most one order while it is occupied.
+ *     tags:
+ *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: tableNumber
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 20
+ *     responses:
+ *       200:
+ *         description: The table order was retrieved successfully.
+ *       400:
+ *         description: Invalid table number.
+ *       404:
+ *         description: Table or order does not exist.
+ *       500:
+ *         description: Unexpected server error.
+ */
+
+/**
+ * @openapi
  * /api/orders/{id}/items:
  *   post:
  *     summary: Add an item to a DRAFT status order
