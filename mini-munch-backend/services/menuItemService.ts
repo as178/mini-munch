@@ -1,14 +1,14 @@
+import { menuItemServiceErrors } from "../errors/menuItemServiceErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
 
 // defined type for the reasons a menu item service function can fail
 export type MenuItemServiceFailureReason =
-  | "MENU_ITEM_NOT_FOUND"
-  | "MENU_ITEM_ALREADY_EXISTS";
+  (typeof menuItemServiceErrors)[keyof typeof menuItemServiceErrors];
 
 // defined type for the failure result of menu item service functions
 export type MenuItemServiceFailure = {
   success: false;
-  reason: MenuItemServiceFailureReason;
+  serviceError: MenuItemServiceFailureReason;
 };
 
 // defined type for the success result of menu item service functions
@@ -44,7 +44,10 @@ export async function getMenuItemById(
 
   // if the menu item does not exist, return a failed result
   if (!menuItem) {
-    return { success: false, reason: "MENU_ITEM_NOT_FOUND" };
+    return {
+      success: false,
+      serviceError: menuItemServiceErrors.MENU_ITEM_NOT_FOUND,
+    };
   }
 
   // else, return a success result with the found menu item document
@@ -69,7 +72,10 @@ export async function createMenuItem(
   // if so, return a failed result to indicate that
   // (concurrent requests to create a menu item with the same name will be handled by the unique index constraint in the schema)
   if (existingMenuItem) {
-    return { success: false, reason: "MENU_ITEM_ALREADY_EXISTS" };
+    return {
+      success: false,
+      serviceError: menuItemServiceErrors.MENU_ITEM_ALREADY_EXISTS,
+    };
   }
 
   // else, create a new menu item document with the parameters
