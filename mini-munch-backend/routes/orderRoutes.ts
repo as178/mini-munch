@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+// Express route handler; registers the table-related routes and maps them to their respective controllers
 const router = Router();
 
 /**
@@ -31,7 +32,7 @@ const router = Router();
  *       404:
  *         description: Table does not exist.
  *       409:
- *         description: Table is not occupied.
+ *         description: Table is not occupied or already has an order.
  *       500:
  *         description: Unexpected server error.
  */
@@ -73,6 +74,51 @@ const router = Router();
  *         description: Invalid order data, including an invalid order ID, menu item ID, or quantity exceeding 10.
  *       404:
  *         description: Order or menu item does not exist.
+ *       409:
+ *         description: Order is not in DRAFT status.
+ *       500:
+ *         description: Unexpected server error.
+ */
+
+/**
+ * @openapi
+ * /api/orders/{id}/items/{menuItemId}:
+ *   patch:
+ *     summary: Change an order item quantity
+ *     description: Changes the quantity of an existing order item in a DRAFT order. The item can remain in the order even if it has been removed from the menu.
+ *     tags:
+ *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: menuItemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - quantity
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 10
+ *     responses:
+ *       200:
+ *         description: Order item quantity was updated successfully.
+ *       400:
+ *         description: Invalid order data.
+ *       404:
+ *         description: Order or order item does not exist.
  *       409:
  *         description: Order is not in DRAFT status.
  *       500:
