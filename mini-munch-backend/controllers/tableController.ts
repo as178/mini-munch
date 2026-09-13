@@ -9,7 +9,7 @@ import {
 import { parseSafeInteger } from "../utils/validation";
 
 // defined mapping of table service failure reasons to HTTP status codes and error messages
-const serviceFailureResponses: Record<
+const tableFailureResponses: Record<
   TableServiceFailureReason,
   { statusCode: number; message: (tableNumber: number) => string }
 > = {
@@ -43,7 +43,7 @@ function createTableServiceError(
   tableNumber: number,
 ): AppError {
   // retrieve the corresponding HTTP status code and error message for the failure reason
-  const response = serviceFailureResponses[reason];
+  const response = tableFailureResponses[reason];
   // create and return an AppError for the controller to pass to the global error middleware
   return new AppError(
     response.statusCode,
