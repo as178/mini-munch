@@ -15,7 +15,7 @@ import {
   parseOrderStatus,
   parseSafeIntegerFromBody,
   parseSafeIntegerFromParam,
-} from "../utils/validation";
+} from "../utils/validationUtil";
 
 /**
  * POST /api/orders

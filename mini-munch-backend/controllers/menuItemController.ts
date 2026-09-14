@@ -10,7 +10,7 @@ import {
   parseFiniteNumber,
   parseObjectId,
   parseRequiredString,
-} from "../utils/validation";
+} from "../utils/validationUtil";
 
 /**
  * GET /api/menu

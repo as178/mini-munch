@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { AppError, createAppServiceError } from "../middleware/errorMiddleware";
 import { getTable, occupyTable, releaseTable } from "../services/tableService";
-import { parseSafeIntegerFromParam } from "../utils/validation";
+import { parseSafeIntegerFromParam } from "../utils/validationUtil";
 
 /**
  * GET /api/tables/:tableNumber
