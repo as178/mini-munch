@@ -28,6 +28,15 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Table was retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - table
+ *               properties:
+ *                 table:
+ *                   $ref: '#/components/schemas/Table'
  *       400:
  *         description: Invalid table number.
  *       404:
@@ -57,6 +66,15 @@ router.get("/:tableNumber", getTableController);
  *     responses:
  *       200:
  *         description: Table was occupied successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - table
+ *               properties:
+ *                 table:
+ *                   $ref: '#/components/schemas/Table'
  *       400:
  *         description: Invalid table number.
  *       404:
@@ -88,6 +106,15 @@ router.patch("/:tableNumber/occupy", occupyTableController);
  *     responses:
  *       200:
  *         description: Table was released successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - table
+ *               properties:
+ *                 table:
+ *                   $ref: '#/components/schemas/Table'
  *       400:
  *         description: Invalid table number.
  *       404:

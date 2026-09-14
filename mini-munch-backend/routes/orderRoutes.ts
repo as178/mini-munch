@@ -37,6 +37,15 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Draft order was created successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - order
+ *               properties:
+ *                 order:
+ *                   $ref: '#/components/schemas/Order'
  *       400:
  *         description: Invalid table number.
  *       404:
@@ -67,6 +76,15 @@ router.post("/", createOrderController);
  *     responses:
  *       200:
  *         description: The table order was retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - order
+ *               properties:
+ *                 order:
+ *                   $ref: '#/components/schemas/Order'
  *       400:
  *         description: Invalid table number.
  *       404:
@@ -104,6 +122,15 @@ router.get("/table/:tableNumber", getOrderByTableController);
  *     responses:
  *       200:
  *         description: Order item was added successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - order
+ *               properties:
+ *                 order:
+ *                   $ref: '#/components/schemas/Order'
  *       400:
  *         description: Invalid order ID or menu item ID.
  *       404:
@@ -150,6 +177,15 @@ router.post("/:id/items", addOrderItemController);
  *     responses:
  *       200:
  *         description: Order item quantity was updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - order
+ *               properties:
+ *                 order:
+ *                   $ref: '#/components/schemas/Order'
  *       400:
  *         description: Invalid order quantity.
  *       404:
@@ -223,6 +259,15 @@ router.delete("/:id/items/:menuItemId", removeOrderItemController);
  *     responses:
  *       200:
  *         description: Order status was updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - order
+ *               properties:
+ *                 order:
+ *                   $ref: '#/components/schemas/Order'
  *       400:
  *         description: Invalid order data, including an invalid order ID, status, or an order with no items.
  *       404:
@@ -245,6 +290,17 @@ router.patch("/:id/status", updateOrderStatusController);
  *     responses:
  *       200:
  *         description: Orders were retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - orders
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
  *       500:
  *         description: Unexpected server error.
  */

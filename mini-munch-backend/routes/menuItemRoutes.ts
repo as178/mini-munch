@@ -20,6 +20,17 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Menu items were retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - menuItems
+ *               properties:
+ *                 menuItems:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/MenuItem'
  *       500:
  *         description: Unexpected server error.
  */
@@ -42,6 +53,15 @@ router.get("/", getAllMenuItemsController);
  *     responses:
  *       200:
  *         description: Menu item was retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - menuItem
+ *               properties:
+ *                 menuItem:
+ *                   $ref: '#/components/schemas/MenuItem'
  *       400:
  *         description: Invalid menu item ID.
  *       404:
@@ -84,6 +104,15 @@ router.get("/:id", getMenuItemController);
  *     responses:
  *       201:
  *         description: Menu item was created successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - menuItem
+ *               properties:
+ *                 menuItem:
+ *                   $ref: '#/components/schemas/MenuItem'
  *       400:
  *         description: Invalid menu item data (name, description, and/or price).
  *       409:
