@@ -1,5 +1,4 @@
-import type { JSX } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import { AxiosError } from "axios";
 import { useNavigate, useParams } from "react-router";
 import toast from "react-hot-toast";
@@ -49,11 +48,13 @@ export default function CustomerDashboard(): JSX.Element {
 
   // poll the current order every 5 seconds so the customer sees status changes
   useEffect(() => {
+    // if there is no order or the order is in READY status, do not poll
+    if (!order || order.status === "READY") return;
     const interval = setInterval(() => {
       void refreshOrder();
     }, 5000);
     return () => clearInterval(interval);
-  }, [tableNumber]);
+  }, [tableNumber, order]);
 
   /**
    * helper function to load the menu items
