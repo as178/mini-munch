@@ -1,5 +1,25 @@
 import type { JSX } from "react";
+import { api } from "../services/api";
+import { AxiosError } from "axios";
 
 export default function TableInput(): JSX.Element {
-  return <p>Enter your table here</p>;
+  async function testTableRequest(): Promise<void> {
+    try {
+      const response = await api.get("/tables/17");
+
+      console.log("Table response:", response.data);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error("Table request failed:", error.response?.data);
+      }
+    }
+  }
+
+  return (
+    <div>
+      <p>Table Input</p>
+
+      <button onClick={() => void testTableRequest()}>Test Table 5</button>
+    </div>
+  );
 }

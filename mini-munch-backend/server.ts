@@ -1,4 +1,5 @@
 import express, { type Application } from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import { connectToDatabase } from "./config/database";
 import swaggerUi from "swagger-ui-express";
@@ -14,6 +15,9 @@ const { PORT } = process.env;
 
 // create the express app
 const app: Application = express();
+
+// configure CORS middleware to allow cross-origin requests
+app.use(cors());
 
 // configure parser middleware to handle JSON requests
 app.use(express.json());
