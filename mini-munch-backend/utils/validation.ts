@@ -1,5 +1,7 @@
 import { AppError } from "../middleware/errorMiddleware";
 import mongoose from "mongoose";
+import type { OrderStatus } from "../models/Order";
+import { orderServiceErrors } from "../errors/orderErrors";
 
 /**
  * converts a string or string array to a safe integer
@@ -116,5 +118,22 @@ export function parseFiniteNumber(
   }
 
   // else, return the valid number
+  return value;
+}
+
+/**
+ * validates a required order status value
+ * @param value the value to validate
+ * @returns the valid order status, or an AppError if the value is not a valid order status
+ */
+export function parseOrderStatus(
+  value: unknown,
+): Exclude<OrderStatus, "DRAFT"> | AppError {
+  // check if the value is a string and one of the valid order statuses
+  if (value !== "SUBMITTED" && value !== "PREPARING" && value !== "READY") {
+    return new AppError(400, "INVALID_STATUS", "Order status is invalid.");
+  }
+
+  // else, return the valid order status
   return value;
 }

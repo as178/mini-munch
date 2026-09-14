@@ -6,10 +6,6 @@ export const orderServiceErrors = {
     reason: "INVALID_QUANTITY",
     message: "Quantity must be a whole number between 1 and 10.",
   },
-  INVALID_STATUS: {
-    reason: "INVALID_STATUS",
-    message: "Order status is invalid.",
-  },
   TABLE_NOT_OCCUPIED: {
     reason: "TABLE_NOT_OCCUPIED",
     message: "The table must be occupied before creating an order.",
@@ -54,7 +50,6 @@ export const orderHttpErrorResponses: Record<
   { statusCode: number }
 > = {
   INVALID_QUANTITY: { statusCode: 400 },
-  INVALID_STATUS: { statusCode: 400 },
   TABLE_NOT_OCCUPIED: { statusCode: 409 },
   ORDER_ALREADY_EXISTS: { statusCode: 409 },
   ORDER_NOT_FOUND: { statusCode: 404 },
