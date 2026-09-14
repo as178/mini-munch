@@ -1,33 +1,110 @@
-import type { JSX } from "react";
-import { api } from "../services/api";
+import { useState, type JSX } from "react";
 import { AxiosError } from "axios";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+import { occupyTable } from "../services/tableService";
 
+// React page where customers can input their table number to occupy a table and proceed to the customer dashboard
 export default function TableInput(): JSX.Element {
-  async function testTableRequest(): Promise<void> {
-    try {
-      const response = await api.get("/tables/17");
+  // router navigation hook to redirect the customer to the dashboard after occupying a table
+  const navigate = useNavigate();
 
-      console.log("Table response:", response.data);
-      toast.success(
-        `Table ${response.data.table.tableNumber} is available: ${response.data.table.available}`,
-      );
+  // state variables to store the table number input and loading state
+  const [tableNumber, setTableNumber] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // function to send the table number to the backend to occupy the table
+  async function handleOccupyTable(): Promise<void> {
+    const parsedTableNumber = Number(tableNumber);
+
+    // basic frontend validation before making the request
+    // if (tableNumber.trim() === "" || !Number.isInteger(parsedTableNumber)) {
+    //   toast.error("Please enter a valid table number.");
+    //   return;
+    // }
+
+    // set loading state to true while the request is being processed
+    setLoading(true);
+    try {
+      // call the occupyTable service function
+      await occupyTable(parsedTableNumber);
+
+      // show a success toast notification if the table was occupied successfully
+      toast.success(`Table ${parsedTableNumber} occupied!`);
+
+      // move the customer to the dashboard after successfully occupying the table
+      navigate("/customer-dashboard");
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        console.error("Table request failed:", error.response?.data);
+        const statusCode = error.response?.status;
+        const message =
+          error.response?.data?.message ?? "Unable to occupy the table.";
+
+        // show an error toast notification with the constructed error message
         toast.error(
-          `${error.response?.data.code}
-          ${error.response?.data.message}`,
+          <span>
+            {statusCode && (
+              <>
+                [<b>{statusCode}</b>]:{" "}
+              </>
+            )}
+            {message}
+          </span>,
         );
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
       }
+    } finally {
+      // reset loading state after the request is complete
+      setLoading(false);
     }
   }
 
   return (
-    <div>
-      <p>Table Input</p>
+    <div className="flex min-h-screen items-center justify-center px-6">
+      <section className="w-full max-w-xl rounded-lg border p-8 shadow-sm">
+        {/* header section with welcome message and instructions */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold">Welcome to Mini Munch!</h1>
 
-      <button onClick={() => void testTableRequest()}>Test Table 5</button>
+          <p className="mt-2 text-gray-600 text-xl">
+            Please enter your table number below.
+          </p>
+        </div>
+
+        {/* input section for the table number and occupy button */}
+        <div className="space-y-4">
+          <label htmlFor="table-number" className="block text-md font-medium">
+            Table Number:
+          </label>
+
+          <input
+            id="table-number"
+            type="number"
+            min="1"
+            max="20"
+            value={tableNumber}
+            onChange={(event) => setTableNumber(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                void handleOccupyTable(); // call the function when the Enter key is pressed
+              }
+            }}
+            placeholder="Enter table number"
+            className="w-full rounded-md border px-4 py-2 outline-none focus:ring-2"
+          />
+
+          <button
+            type="button"
+            onClick={() => void handleOccupyTable()} // ... or when button is clicked
+            disabled={loading}
+            className="w-full cursor-pointer rounded-md bg-cyan-500 text-white text-xl px-4 py-2 font-medium transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {/* show button loading text + disable button while the request is being processed */}
+            {loading ? "Occupying..." : "Occupy Table"}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
