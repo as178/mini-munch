@@ -2,12 +2,11 @@ import { useState, type JSX } from "react";
 import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { occupyTable } from "../services/tableService";
+import { patchApiTablesTableNumberOccupy } from "../services/generated";
 
 // React page where customers can input their table number to occupy a table and proceed to the customer dashboard
 export default function TableInput(): JSX.Element {
-  // router navigation hook to redirect the customer to the dashboard after occupying a table
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // router navigation hook
 
   // state variables to store the table number input and loading state
   const [tableNumber, setTableNumber] = useState<string>("");
@@ -27,13 +26,13 @@ export default function TableInput(): JSX.Element {
     setLoading(true);
     try {
       // call the occupyTable service function
-      await occupyTable(parsedTableNumber);
+      await patchApiTablesTableNumberOccupy(parsedTableNumber);
 
       // show a success toast notification if the table was occupied successfully
       toast.success(`Table ${parsedTableNumber} occupied!`);
 
       // move the customer to the dashboard after successfully occupying the table
-      navigate("/customer-dashboard");
+      navigate(`/customer-dashboard/${parsedTableNumber}`);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         const statusCode = error.response?.status;
@@ -62,7 +61,7 @@ export default function TableInput(): JSX.Element {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
-      <section className="w-full max-w-xl rounded-lg border p-8 shadow-sm">
+      <section className="w-full max-w-xl rounded-lg p-8 inset-shadow-sm inset-shadow-gray-300 bg-gray-50">
         {/* header section with welcome message and instructions */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold">Welcome to Mini Munch!</h1>

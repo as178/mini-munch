@@ -15,7 +15,7 @@ export const router = createBrowserRouter([
     element: <TableInput />,
   },
   {
-    path: "/customer-dashboard",
+    path: "/customer-dashboard/:tableNumber",
     element: <CustomerDashboard />,
   },
   {
