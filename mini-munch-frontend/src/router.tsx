@@ -4,7 +4,7 @@ import StaffDashboard from "./pages/StaffDashboard.tsx";
 import { createBrowserRouter, Navigate } from "react-router";
 
 // all routes for the application are defined here, and the router is exported to be used in main.tsx
-// if the user navigates to a route that does not exist, they will be redirected to the login page
+// if the user navigates to a route that does not exist, they will be redirected to the table input page
 export const router = createBrowserRouter([
   {
     path: "/",
