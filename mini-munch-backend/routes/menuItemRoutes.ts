@@ -85,7 +85,7 @@ router.get("/:id", getMenuItemController);
  *       201:
  *         description: Menu item was created successfully.
  *       400:
- *         description: Invalid menu item data.
+ *         description: Invalid menu item data (name, description, and/or price).
  *       409:
  *         description: Menu item already exists.
  *       500:

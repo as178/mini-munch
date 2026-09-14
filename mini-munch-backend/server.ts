@@ -4,8 +4,9 @@ import { connectToDatabase } from "./config/database";
 import swaggerUi from "swagger-ui-express";
 import { swagger } from "./config/swagger";
 import { errorMiddleware } from "./middleware/errorMiddleware";
-import menuItemRoutes from "./routes/menuItemRoutes";
 import tableRoutes from "./routes/tableRoutes";
+import menuItemRoutes from "./routes/menuItemRoutes";
+import orderRoutes from "./routes/orderRoutes";
 
 // load environment variable from .env file
 dotenv.config();
@@ -23,6 +24,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swagger));
 // register mini-munch routes
 app.use("/api/tables", tableRoutes);
 app.use("/api/menu", menuItemRoutes);
+app.use("/api/orders", orderRoutes);
 
 // global error handling middleware
 app.use(errorMiddleware);

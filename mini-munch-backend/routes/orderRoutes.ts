@@ -1,4 +1,14 @@
 import { Router } from "express";
+import {
+  addOrderItemController,
+  createOrderController,
+  deleteOrderController,
+  getOrderByTableController,
+  getOrdersController,
+  removeOrderItemController,
+  updateOrderItemController,
+  updateOrderStatusController,
+} from "../controllers/orderController";
 
 // Express route handler; registers the table-related routes and maps them to their respective controllers
 const router = Router();
@@ -36,6 +46,7 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.post("/", createOrderController);
 
 /**
  * @openapi
@@ -63,12 +74,13 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.get("/table/:tableNumber", getOrderByTableController);
 
 /**
  * @openapi
  * /api/orders/{id}/items:
  *   post:
- *     summary: Add an item to a DRAFT status order
+ *     summary: Add an order item to a DRAFT status order
  *     description: Adds an existing menu item to the order and stores its current name and price as a snapshot. Deleted menu items cannot be added to new orders.
  *     tags:
  *       - Orders
@@ -101,6 +113,7 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.post("/:id/items", addOrderItemController);
 
 /**
  * @openapi
@@ -138,7 +151,7 @@ const router = Router();
  *       200:
  *         description: Order item quantity was updated successfully.
  *       400:
- *         description: Invalid order data.
+ *         description: Invalid order quantity.
  *       404:
  *         description: Order or order item does not exist.
  *       409:
@@ -146,12 +159,13 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.patch("/:id/items/:menuItemId", updateOrderItemController);
 
 /**
  * @openapi
  * /api/orders/{id}/items/{menuItemId}:
  *   delete:
- *     summary: Remove an item from a DRAFT status order
+ *     summary: Remove an order item from a DRAFT status order
  *     description: Removes an order item by menu item ID. This works from the stored snapshot even if the menu item was deleted.
  *     tags:
  *       - Orders
@@ -178,6 +192,7 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.delete("/:id/items/:menuItemId", removeOrderItemController);
 
 /**
  * @openapi
@@ -217,6 +232,7 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.patch("/:id/status", updateOrderStatusController);
 
 /**
  * @openapi
@@ -232,6 +248,7 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.get("/", getOrdersController);
 
 /**
  * @openapi
@@ -259,5 +276,6 @@ const router = Router();
  *       500:
  *         description: Unexpected server error.
  */
+router.delete("/:id", deleteOrderController);
 
 export default router;
