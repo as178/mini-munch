@@ -8,6 +8,7 @@ import type {
   Order,
 } from "../services/generated/generatedApi.schemas";
 import {
+  deleteApiOrdersId,
   deleteApiOrdersIdItemsMenuItemId,
   getApiMenu,
   getApiOrdersTableTableNumber,
@@ -176,19 +177,19 @@ export default function CustomerDashboard(): JSX.Element {
         status: "SUBMITTED",
       });
       setOrder(updateStatusResponse.order);
-      toast.success(
-        "Order submitted! Please wait for your order to be prepared.",
-      );
+      toast.success("Order submitted! Please wait for your order to be ready.");
     } catch (error: unknown) {
       handleApiError(error, "Failed to submit order. Please try again.");
     }
   }
 
   /**
-   * helper function to release the customer's table, delete their order, and return to the welcome page
+   * helper function to release the customer's table, delete their READY status order, and return to the table input page
    */
   async function handleLeaveTable(): Promise<void> {
     try {
+      if (!order) return;
+      await deleteApiOrdersId(order._id);
       await patchApiTablesTableNumberRelease(Number(tableNumber));
       toast.success("Thank you for dining with Mini Munch!");
       navigate("/table-input");
@@ -206,5 +207,178 @@ export default function CustomerDashboard(): JSX.Element {
     );
   }
 
-  return <p>Customer Dashboard</p>;
+  // if the page is still loading, show a loading message
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-xl">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen justify-center px-6 py-10">
+      <section className="w-full max-w-4xl space-y-8 rounded-lg p-8 inset-shadow-sm inset-shadow-gray-300 bg-gray-50">
+        {/* page header; app title, table number and leave table button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Mini Munch</h1>
+
+            <p className="mt-1 text-xl text-gray-600">Table {tableNumber}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleLeaveTable()}
+            disabled={order?.status !== "READY"} // disable the button if the order is not in READY status
+            className="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white text-xl font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Leave Table
+          </button>
+        </div>
+
+        {/* menu section; title + formatted list of all menu items */}
+        <div>
+          <h2 className="mb-4 text-2xl font-bold">Menu</h2>
+
+          <div className="space-y-3">
+            {menuItems.map((item) => (
+              <div
+                key={item._id}
+                className="flex items-center justify-between rounded-md p-4 bg-white shadow-md transition hover:shadow-lg"
+              >
+                {/* menu item details section; name, description and price + add button */}
+                <div>
+                  <h3 className="font-bold">{item.name}</h3>
+                  <p className="text-gray-600 font-medium">
+                    {item.description}
+                  </p>
+                  <p className="font-medium">${item.price.toFixed(2)}</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => void handleAddItem(item._id)}
+                  disabled={order?.status !== "DRAFT"} // disable the button if the order is not in DRAFT status
+                  className="cursor-pointer rounded-md bg-emerald-400 px-6 py-2 text-white text-md font-medium hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* current order section; list of all order items + action buttons, total and order status */}
+        <div>
+          <h2 className="mb-4 text-2xl font-bold">Current Order</h2>
+
+          {order && order.items.length > 0 ? (
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <div
+                  key={item.menuItem}
+                  className="rounded-md p-4 bg-white shadow-md transition hover:shadow-lg"
+                >
+                  {/* order item details section; name and price + remove button */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold">{item.name}</h3>
+                      <p className="font-medium ">
+                        ${item.price.toFixed(2)} each
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleRemoveItem(item.menuItem)}
+                      disabled={order.status !== "DRAFT"}
+                      className="cursor-pointer rounded-md bg-red-400 px-6 py-2 text-white text-md font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  {/* order item quantity section; decrement button, current quantity and increment button */}
+                  <div className="mt-3 flex items-center gap-3 border-t border-gray-300 pt-4">
+                    <button
+                      type="button"
+                      disabled={order.status !== "DRAFT" || item.quantity === 1} // disable button if status is not DRAFT or quantity is 1 (cannot go below 1)
+                      onClick={() =>
+                        void handleUpdateQuantity(
+                          item.menuItem,
+                          item.quantity - 1,
+                        )
+                      }
+                      className="cursor-pointer rounded px-4 py-1 bg-violet-200 text-violet-900 text-lg font-bold hover:bg-violet-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    >
+                      -
+                    </button>
+
+                    <span className="text-lg font-medium">{item.quantity}</span>
+
+                    <button
+                      type="button"
+                      disabled={
+                        order.status !== "DRAFT" || item.quantity === 10 // disable button if status is not DRAFT or quantity is 10 (cannot go above 10)
+                      }
+                      onClick={() =>
+                        void handleUpdateQuantity(
+                          item.menuItem,
+                          item.quantity + 1,
+                        )
+                      }
+                      className="cursor-pointer rounded px-3 py-1 bg-violet-200 text-violet-900 text-lg font-bold hover:bg-violet-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* order total section; total price of all order items */}
+              <div className="flex justify-between pt-4 text-2xl font-bold">
+                <span>Total</span>
+                <span>${order.total.toFixed(2)}</span>
+              </div>
+            </div>
+          ) : (
+            // message to display if the order is empty (no items added yet)
+            <p className="text-xl text-gray-600">
+              Your order is currently empty.
+            </p>
+          )}
+        </div>
+
+        {/* order status section; order status + submit button */}
+        {order && (
+          <div className="space-y-4 rounded-md p-4 bg-white shadow-md transition hover:shadow-lg">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Order Status</h2>
+
+              <span className="rounded bg-cyan-100 px-3 py-1 font-bold bg-cyan-700 text-white text-xl shadow-sm">
+                {order.status}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={order.status !== "DRAFT" || order.items.length === 0} // disable button if status is not DRAFT or order is empty
+              onClick={() => void handleSubmitOrder()}
+              className="cursor-pointer w-full rounded-md bg-cyan-500 px-4 py-2 text-white text-md font-medium hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Submit Order
+            </button>
+
+            {/* message to display if the order is in READY status */}
+            {order.status === "READY" && (
+              <p className="flex items-center justify-center font-medium text-cyan-600 text-lg">
+                Your order is ready for pickup, please leave the table when
+                finished.
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+    </div>
+  );
 }
