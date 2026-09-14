@@ -1,8 +1,8 @@
 import { useState, type JSX } from "react";
-import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { patchApiTablesTableNumberOccupy } from "../services/generated";
+import handleApiError from "../utils/errorUtil";
 
 // React page where customers can input their table number to occupy a table and proceed to the customer dashboard
 export default function TableInput(): JSX.Element {
@@ -34,25 +34,7 @@ export default function TableInput(): JSX.Element {
       // move the customer to the dashboard after successfully occupying the table
       navigate(`/customer-dashboard/${parsedTableNumber}`);
     } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        const statusCode = error.response?.status;
-        const message =
-          error.response?.data?.message ?? "Unable to occupy the table.";
-
-        // show an error toast notification with the constructed error message
-        toast.error(
-          <span>
-            {statusCode && (
-              <>
-                [<b>{statusCode}</b>]:{" "}
-              </>
-            )}
-            {message}
-          </span>,
-        );
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      handleApiError(error, "Failed to occupy the table. Please try again.");
     } finally {
       // reset loading state after the request is complete
       setLoading(false);
