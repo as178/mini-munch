@@ -7,37 +7,26 @@ import {
 } from "../models/Order";
 import {
   getMenuItemById,
-  type MenuItemServiceFailure,
+  type MenuItemServiceFailureReason,
 } from "./menuItemService";
-import { getTable, type TableServiceFailure } from "./tableService";
+import type { ServiceResult } from "./serviceResult";
+import { getTable, type TableServiceFailureReason } from "./tableService";
 
-// defined type for the reasons an order service function can fail
+// defined type for the reasons specific to an order service function failure
 export type OrderServiceFailureReason =
   (typeof orderServiceErrors)[keyof typeof orderServiceErrors];
 
-// defined type for the failure result of order service functions
-export type OrderServiceFailure = {
-  success: false;
-  serviceError: OrderServiceFailureReason;
-};
+// discriminated union for all order service function failures (including those from table and menu item services)
+export type OrderFailureReason =
+  | OrderServiceFailureReason
+  | TableServiceFailureReason
+  | MenuItemServiceFailureReason;
 
-// defined type for the success result of order service functions
-export type OrderServiceSuccess = {
-  success: true;
-  order: OrderDocument;
-};
-
-// discriminated union for order service function results (one order)
-export type OrderServiceResult =
-  | OrderServiceSuccess
-  | OrderServiceFailure
-  | TableServiceFailure
-  | MenuItemServiceFailure;
-
-// discriminated union for order service function results (multiple orders)
-export type OrderListServiceResult =
-  | { success: true; orders: OrderDocument[] }
-  | OrderServiceFailure;
+// defined type for order service function results (one order)
+export type OrderServiceResult = ServiceResult<
+  OrderDocument,
+  OrderFailureReason
+>;
 
 // calculate the order total (starting from 0) from the stored price snapshots
 // (serves as one source of truth for the order total, rather than relying on the stored total in the order document)
@@ -48,7 +37,7 @@ function calculateTotal(items: OrderItem[]): number {
 // helper function to retrieve a DRAFT status order by its id, or return a failure result if the order does not exist or is not in DRAFT status
 async function retrieveDraftOrder(
   orderId: string,
-): Promise<OrderServiceSuccess | OrderServiceFailure> {
+): Promise<OrderServiceResult> {
   const existingOrder = await OrderModel.findById(orderId);
   if (!existingOrder) {
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
@@ -56,7 +45,7 @@ async function retrieveDraftOrder(
   if (existingOrder.status !== "DRAFT") {
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_DRAFT };
   }
-  return { success: true, order: existingOrder };
+  return { success: true, data: existingOrder };
 }
 
 /**
@@ -74,7 +63,7 @@ export async function createOrder(
   }
 
   // if the table is available, return a failure result with the appropriate reason
-  if (tableServiceResult.table.available) {
+  if (tableServiceResult.data.available) {
     return {
       success: false,
       serviceError: orderServiceErrors.TABLE_NOT_OCCUPIED,
@@ -95,14 +84,14 @@ export async function createOrder(
   if (existingOrderResult.serviceError === orderServiceErrors.ORDER_NOT_FOUND) {
     // create a new order document with DRAFT status for the occupied table
     const order = await OrderModel.create({
-      table: tableServiceResult.table._id,
+      table: tableServiceResult.data._id,
       items: [],
       total: 0,
       status: "DRAFT",
     });
 
     // and return a successful result
-    return { success: true, order };
+    return { success: true, data: order };
   } else {
     // if the existing order retrieval failed for any other reason, do not make a new order and return that failure result
     return existingOrderResult;
@@ -125,7 +114,7 @@ export async function getOrderByTable(
 
   // retrieve the order for specified table
   const order = await OrderModel.findOne({
-    table: tableServiceResult.table._id,
+    table: tableServiceResult.data._id,
   });
 
   // if the order does not exist, return a failed result
@@ -134,7 +123,7 @@ export async function getOrderByTable(
   }
 
   // else, return a success result with the found order document
-  return { success: true, order };
+  return { success: true, data: order };
 }
 
 /**
@@ -160,7 +149,7 @@ export async function addOrderItem(
   }
 
   // if the menu item is already in the order, return a failure result with the appropriate reason
-  const existingItem = existingOrder.order.items.find((item) =>
+  const existingItem = existingOrder.data.items.find((item) =>
     item.menuItem.equals(menuItemId),
   );
   if (existingItem) {
@@ -171,17 +160,17 @@ export async function addOrderItem(
   }
 
   // else, add the menu item to the order with a quantity of 1 and store its current details as a snapshot
-  existingOrder.order.items.push({
-    menuItem: menuItemServiceResult.menuItem._id,
-    name: menuItemServiceResult.menuItem.name,
-    price: menuItemServiceResult.menuItem.price,
+  existingOrder.data.items.push({
+    menuItem: menuItemServiceResult.data._id,
+    name: menuItemServiceResult.data.name,
+    price: menuItemServiceResult.data.price,
     quantity: 1,
   });
 
   // recalculate the order total, save and return a successful result with the updated existing order
-  existingOrder.order.total = calculateTotal(existingOrder.order.items);
-  await existingOrder.order.save();
-  return { success: true, order: existingOrder.order };
+  existingOrder.data.total = calculateTotal(existingOrder.data.items);
+  await existingOrder.data.save();
+  return { success: true, data: existingOrder.data };
 }
 
 /**
@@ -211,7 +200,7 @@ export async function updateOrderItem(
   }
 
   // find the order item in the order's items array by menu item id, return a failure result if the item does not exist
-  const orderItem = existingOrder.order.items.find((item) =>
+  const orderItem = existingOrder.data.items.find((item) =>
     item.menuItem.equals(menuItemId),
   );
   if (!orderItem) {
@@ -223,9 +212,9 @@ export async function updateOrderItem(
 
   // update the order item's quantity, recalculate the order total, save and return a successful result with the updated order
   orderItem.quantity = quantity;
-  existingOrder.order.total = calculateTotal(existingOrder.order.items);
-  await existingOrder.order.save();
-  return { success: true, order: existingOrder.order };
+  existingOrder.data.total = calculateTotal(existingOrder.data.items);
+  await existingOrder.data.save();
+  return { success: true, data: existingOrder.data };
 }
 
 /**
@@ -245,11 +234,11 @@ export async function removeOrderItem(
   }
 
   // remove the item from the order, return a failure result if the item does not exist
-  const originalLength = existingOrder.order.items.length;
-  existingOrder.order.items = existingOrder.order.items.filter(
+  const originalLength = existingOrder.data.items.length;
+  existingOrder.data.items = existingOrder.data.items.filter(
     (item) => !item.menuItem.equals(menuItemId),
   );
-  if (existingOrder.order.items.length === originalLength) {
+  if (existingOrder.data.items.length === originalLength) {
     return {
       success: false,
       serviceError: orderServiceErrors.ORDER_ITEM_NOT_FOUND,
@@ -257,9 +246,9 @@ export async function removeOrderItem(
   }
 
   // recalculate the order total, save and return a successful result with the updated order
-  existingOrder.order.total = calculateTotal(existingOrder.order.items);
-  await existingOrder.order.save();
-  return { success: true, order: existingOrder.order };
+  existingOrder.data.total = calculateTotal(existingOrder.data.items);
+  await existingOrder.data.save();
+  return { success: true, data: existingOrder.data };
 }
 
 /**
@@ -301,21 +290,23 @@ export async function updateOrderStatus(
   // update the order status, save and return a successful result with the updated order
   existingOrder.status = status;
   await existingOrder.save();
-  return { success: true, order: existingOrder };
+  return { success: true, data: existingOrder };
 }
 
 /**
  * retrieves all orders for the staff dashboard (excludes DRAFT orders)
  * @returns a successful result with the orders, or a failure result with a reason
  */
-export async function getOrders(): Promise<OrderListServiceResult> {
+export async function getOrders(): Promise<
+  ServiceResult<OrderDocument[], OrderFailureReason>
+> {
   // retrieve all orders with status SUBMITTED, PREPARING, or READY
   const orders = await OrderModel.find({
     status: { $in: ["SUBMITTED", "PREPARING", "READY"] },
   })
     .sort({ createdAt: 1 }) // sort the orders by creation time in ascending order (oldest first)
     .populate("table", "tableNumber"); // populate the table reference with its table number
-  return { success: true, orders };
+  return { success: true, data: orders };
 }
 
 /**
@@ -325,7 +316,7 @@ export async function getOrders(): Promise<OrderListServiceResult> {
  */
 export async function deleteOrder(
   orderId: string,
-): Promise<OrderServiceFailure | { success: true }> {
+): Promise<ServiceResult<void, OrderFailureReason>> {
   // if the order does not exist, return a failure result with the appropriate reason
   const existingOrder = await OrderModel.findById(orderId);
   if (!existingOrder) {
@@ -339,5 +330,5 @@ export async function deleteOrder(
 
   // delete the order and return a successful result with no content
   await existingOrder.deleteOne();
-  return { success: true };
+  return { success: true, data: undefined };
 }

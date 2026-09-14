@@ -62,6 +62,6 @@ export const orderHttpErrorResponses: Record<
   ORDER_NOT_DRAFT: { statusCode: 409 },
   ORDER_NOT_READY: { statusCode: 409 },
   INVALID_STATUS_TRANSITION: { statusCode: 409 },
-  ORDER_HAS_NO_ITEMS: { statusCode: 409 },
+  ORDER_HAS_NO_ITEMS: { statusCode: 400 },
   ORDER_ITEM_NOT_FOUND: { statusCode: 404 },
 };

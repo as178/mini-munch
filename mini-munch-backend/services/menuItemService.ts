@@ -1,26 +1,16 @@
 import { menuItemServiceErrors } from "../errors/menuItemErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
+import type { ServiceResult } from "./serviceResult";
 
 // defined type for the reasons a menu item service function can fail
 export type MenuItemServiceFailureReason =
   (typeof menuItemServiceErrors)[keyof typeof menuItemServiceErrors];
 
-// defined type for the failure result of menu item service functions
-export type MenuItemServiceFailure = {
-  success: false;
-  serviceError: MenuItemServiceFailureReason;
-};
-
-// defined type for the success result of menu item service functions
-export type MenuItemServiceSuccess = {
-  success: true;
-  menuItem: MenuItemDocument;
-};
-
-// discriminated union for the result of menu item service functions
-export type MenuItemServiceResult =
-  | MenuItemServiceSuccess
-  | MenuItemServiceFailure;
+// result of menu item service functions
+export type MenuItemServiceResult = ServiceResult<
+  MenuItemDocument,
+  MenuItemServiceFailureReason
+>;
 
 /**
  * retrieves all menu item documents in the menu item collection
@@ -51,7 +41,7 @@ export async function getMenuItemById(
   }
 
   // else, return a success result with the found menu item document
-  return { success: true, menuItem };
+  return { success: true, data: menuItem };
 }
 
 /**
@@ -87,7 +77,7 @@ export async function createMenuItem(
   });
 
   // return a success result with the created menu item document
-  return { success: true, menuItem };
+  return { success: true, data: menuItem };
 }
 
 /**
@@ -97,7 +87,7 @@ export async function createMenuItem(
  */
 export async function deleteMenuItem(
   id: string,
-): Promise<MenuItemServiceFailure | { success: true }> {
+): Promise<ServiceResult<void, MenuItemServiceFailureReason>> {
   // retrieve the menu item document by its id
   const menuItemToBeDeleted = await getMenuItemById(id);
 
@@ -107,8 +97,8 @@ export async function deleteMenuItem(
   }
 
   // delete the menu item document from the database
-  await menuItemToBeDeleted.menuItem.deleteOne();
+  await menuItemToBeDeleted.data.deleteOne();
 
   // return a success result with no content
-  return { success: menuItemToBeDeleted.success };
+  return { success: true, data: undefined };
 }

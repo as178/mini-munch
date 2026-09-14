@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { AppError, createAppServiceError } from "../middleware/errorMiddleware";
 import { getTable, occupyTable, releaseTable } from "../services/tableService";
-import { parseSafeInteger } from "../utils/validation";
+import { parseSafeIntegerFromParam } from "../utils/validation";
 
 /**
  * GET /api/tables/:tableNumber
@@ -13,7 +13,7 @@ export async function getTableController(
   next: NextFunction,
 ): Promise<void> {
   // parse the table number from the request parameter, return an error if it is not a valid number
-  const tableNumber = parseSafeInteger(req.params.tableNumber);
+  const tableNumber = parseSafeIntegerFromParam(req.params.tableNumber);
   if (tableNumber instanceof AppError) {
     next(tableNumber);
     return;
@@ -31,9 +31,9 @@ export async function getTableController(
 
     res.status(200).json({
       table: {
-        id: tableServiceResult.table._id,
-        tableNumber: tableServiceResult.table.tableNumber,
-        available: tableServiceResult.table.available,
+        id: tableServiceResult.data._id,
+        tableNumber: tableServiceResult.data.tableNumber,
+        available: tableServiceResult.data.available,
       },
     });
 
@@ -53,7 +53,7 @@ export async function occupyTableController(
   next: NextFunction,
 ): Promise<void> {
   // parse the table number from the request parameter, return an error if it is not a valid number
-  const tableNumber = parseSafeInteger(req.params.tableNumber);
+  const tableNumber = parseSafeIntegerFromParam(req.params.tableNumber);
   if (tableNumber instanceof AppError) {
     next(tableNumber);
     return;
@@ -71,11 +71,11 @@ export async function occupyTableController(
 
     // else, return a success response with the occupied table document
     res.status(200).json({
-      message: `Table ${tableServiceResult.table.tableNumber} has been occupied.`,
+      message: `Table ${tableServiceResult.data.tableNumber} has been occupied.`,
       table: {
-        id: tableServiceResult.table._id,
-        tableNumber: tableServiceResult.table.tableNumber,
-        available: tableServiceResult.table.available,
+        id: tableServiceResult.data._id,
+        tableNumber: tableServiceResult.data.tableNumber,
+        available: tableServiceResult.data.available,
       },
     });
 
@@ -95,7 +95,7 @@ export async function releaseTableController(
   next: NextFunction,
 ): Promise<void> {
   // parse the table number from the request parameter, return an error if it is not a valid number
-  const tableNumber = parseSafeInteger(req.params.tableNumber);
+  const tableNumber = parseSafeIntegerFromParam(req.params.tableNumber);
   if (tableNumber instanceof AppError) {
     next(tableNumber);
     return;
@@ -113,11 +113,11 @@ export async function releaseTableController(
 
     // else, return a success response with the released table document
     res.status(200).json({
-      message: `Table ${tableServiceResult.table.tableNumber} has been released.`,
+      message: `Table ${tableServiceResult.data.tableNumber} has been released.`,
       table: {
-        id: tableServiceResult.table._id,
-        tableNumber: tableServiceResult.table.tableNumber,
-        available: tableServiceResult.table.available,
+        id: tableServiceResult.data._id,
+        tableNumber: tableServiceResult.data.tableNumber,
+        available: tableServiceResult.data.available,
       },
     });
 

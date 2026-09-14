@@ -58,7 +58,7 @@ export async function getMenuItemController(
       return;
     }
 
-    res.status(200).json({ menuItem: menuItemServiceResult.menuItem });
+    res.status(200).json({ menuItem: menuItemServiceResult.data });
 
     // catch any unexpected errors and pass them to the global error middleware
   } catch (error: unknown) {
@@ -109,7 +109,7 @@ export async function createMenuItemController(
       return;
     }
 
-    res.status(201).json({ menuItem: menuItemServiceResult.menuItem });
+    res.status(201).json({ menuItem: menuItemServiceResult.data });
 
     // catch any unexpected errors and pass them to the global error middleware
   } catch (error: unknown) {

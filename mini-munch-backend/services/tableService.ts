@@ -1,25 +1,16 @@
 import { tableServiceErrors } from "../errors/tableErrors";
 import { TableModel, type TableDocument } from "../models/Table";
+import type { ServiceResult } from "./serviceResult";
 
 // defined type for the reasons a table service function can fail
 export type TableServiceFailureReason =
   (typeof tableServiceErrors)[keyof typeof tableServiceErrors];
 
-// defined type for the failure result of table service functions
-export type TableServiceFailure = {
-  success: false;
-  serviceError: TableServiceFailureReason;
-};
-
-// defined type for the success result of table service functions
-export type TableServiceSuccess = {
-  success: true;
-  table: TableDocument;
-};
-
-// discriminated union for the result of table service functions
-export type TableServiceResult = TableServiceSuccess | TableServiceFailure;
-
+// result of table service functions
+export type TableServiceResult = ServiceResult<
+  TableDocument,
+  TableServiceFailureReason
+>;
 /**
  * validate table number
  * @param tableNumber the number of the table to validate
@@ -55,7 +46,7 @@ export async function getTable(
   }
 
   // else, return a success result with the found table document
-  return { success: true, table };
+  return { success: true, data: table };
 }
 
 /**
@@ -96,7 +87,7 @@ export async function occupyTable(
   }
 
   // return the updated table document and a success result
-  return { success: true, table };
+  return { success: true, data: table };
 }
 
 /**
@@ -137,5 +128,5 @@ export async function releaseTable(
   }
 
   // return the updated table document and a success result
-  return { success: true, table };
+  return { success: true, data: table };
 }
