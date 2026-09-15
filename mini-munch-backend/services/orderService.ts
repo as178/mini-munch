@@ -82,13 +82,14 @@ export async function createOrder(
 
   // else, if the occupied table does not have an order
   if (existingOrderResult.serviceError === orderServiceErrors.ORDER_NOT_FOUND) {
-    // create a new order document with DRAFT status for the occupied table
+    // create a new order document with DRAFT status for the occupied table + populate the table reference with its table number
     const order = await OrderModel.create({
       table: tableServiceResult.data._id,
       items: [],
       total: 0,
       status: "DRAFT",
     });
+    await order.populate("table", "tableNumber");
 
     // and return a successful result
     return { success: true, data: order };
@@ -122,7 +123,8 @@ export async function getOrderByTable(
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
 
-  // else, return a success result with the found order document
+  // populate the table reference with its table number + return a success result with the found order document
+  await order.populate("table", "tableNumber");
   return { success: true, data: order };
 }
 
@@ -167,9 +169,10 @@ export async function addOrderItem(
     quantity: 1,
   });
 
-  // recalculate the order total, save and return a successful result with the updated existing order
+  // recalculate the order total, save, populate the table reference, and return a successful result with the updated existing order
   existingOrder.data.total = calculateTotal(existingOrder.data.items);
   await existingOrder.data.save();
+  await existingOrder.data.populate("table", "tableNumber");
   return { success: true, data: existingOrder.data };
 }
 
@@ -210,10 +213,12 @@ export async function updateOrderItem(
     };
   }
 
-  // update the order item's quantity, recalculate the order total, save and return a successful result with the updated order
+  // update the order item's quantity, recalculate the order total, save, populate the table reference
+  // and return a successful result with the updated order
   orderItem.quantity = quantity;
   existingOrder.data.total = calculateTotal(existingOrder.data.items);
   await existingOrder.data.save();
+  await existingOrder.data.populate("table", "tableNumber");
   return { success: true, data: existingOrder.data };
 }
 
@@ -287,9 +292,10 @@ export async function updateOrderStatus(
     };
   }
 
-  // update the order status, save and return a successful result with the updated order
+  // update the order status, save, populate the table reference, and return a successful result with the updated order
   existingOrder.status = status;
   await existingOrder.save();
+  await existingOrder.populate("table", "tableNumber");
   return { success: true, data: existingOrder };
 }
 

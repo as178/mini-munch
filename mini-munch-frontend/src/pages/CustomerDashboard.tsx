@@ -110,6 +110,7 @@ export default function CustomerDashboard(): JSX.Element {
         // if the old "table session" is over, navigate back to the table input page
         toast.success(
           "Your table session has ended. To create a new order, please enter an available table number again.",
+          { duration: 6500 },
         );
         navigate("/table-input", { replace: true });
       }

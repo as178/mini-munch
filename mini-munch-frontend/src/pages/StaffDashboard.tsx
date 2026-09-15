@@ -18,9 +18,10 @@ import handleApiError from "../utils/errorUtil";
 
 // React page for staff to manage menu items and current orders
 export default function StaffDashboard(): JSX.Element {
-  // state variables for menu items, current orders and loading state
+  // state variables for menu items, current orders, order status updates, and loading state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [updatingOrderStatus, setUpdatingOrderStatus] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   // state variables for the add menu item form
@@ -124,6 +125,8 @@ export default function StaffDashboard(): JSX.Element {
     status: Exclude<OrderStatus, "DRAFT">,
   ): Promise<void> {
     try {
+      // set the updating order status state variable to true while request is processed
+      setUpdatingOrderStatus(true);
       const updateStatusResponse = await patchApiOrdersIdStatus(orderId, {
         status,
       });
@@ -134,9 +137,12 @@ export default function StaffDashboard(): JSX.Element {
           order._id === orderId ? updateStatusResponse.order : order,
         ),
       );
-      toast.success(`Order status updated to: ${status}`);
+      toast.success(`Order status updated to: ${status}`, { duration: 6000 });
     } catch (error: unknown) {
       handleApiError(error, "Failed to update order status.");
+    } finally {
+      // reset the updating order status state variable after the request is complete
+      setUpdatingOrderStatus(false);
     }
   }
 
@@ -336,13 +342,14 @@ export default function StaffDashboard(): JSX.Element {
                       {statusAction && (
                         <button
                           type="button"
+                          disabled={updatingOrderStatus}
                           onClick={() =>
                             void handleUpdateStatus(
                               order._id,
                               statusAction.status,
                             )
                           }
-                          className="w-full cursor-pointer rounded-md bg-cyan-500 px-4 py-2 text-md font-medium text-white hover:bg-cyan-700"
+                          className="w-full cursor-pointer rounded-md bg-cyan-500 px-4 py-2 text-md font-medium text-white hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {statusAction.label}
                         </button>
@@ -350,8 +357,9 @@ export default function StaffDashboard(): JSX.Element {
                       {order.status === "READY" && (
                         <button
                           type="button"
+                          disabled={updatingOrderStatus}
                           onClick={() => void handleDeleteOrder(order)}
-                          className="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 text-md font-medium text-white hover:bg-red-700"
+                          className="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 text-md font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Discard Order & Release Table
                         </button>
