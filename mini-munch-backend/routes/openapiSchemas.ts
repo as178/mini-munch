@@ -2,7 +2,7 @@
  * @openapi
  * components:
  *   schemas:
- * 
+ *
  *     Table:
  *       type: object
  *       required:
@@ -18,7 +18,20 @@
  *           maximum: 20
  *         available:
  *           type: boolean
-
+ *
+ *     OrderTable:
+ *       type: object
+ *       required:
+ *         - _id
+ *         - tableNumber
+ *       properties:
+ *         _id:
+ *           type: string
+ *         tableNumber:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 20
+ *
  *     MenuItem:
  *       type: object
  *       required:
@@ -40,7 +53,7 @@
  *         price:
  *           type: number
  *           minimum: 0
- * 
+ *
  *     OrderItem:
  *       type: object
  *       required:
@@ -76,7 +89,7 @@
  *         _id:
  *           type: string
  *         table:
- *           type: string
+ *           $ref: '#/components/schemas/OrderTable'
  *         items:
  *           type: array
  *           items:

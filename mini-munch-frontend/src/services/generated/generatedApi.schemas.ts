@@ -15,6 +15,15 @@ export interface Table {
   available: boolean;
 }
 
+export interface OrderTable {
+  _id: string;
+  /**
+     * @minimum 1
+     * @maximum 20
+     */
+  tableNumber: number;
+}
+
 export interface MenuItem {
   _id: string;
   /**
@@ -59,7 +68,7 @@ export const OrderStatus = {
 
 export interface Order {
   _id: string;
-  table: string;
+  table: OrderTable;
   items: OrderItem[];
   /** @minimum 0 */
   total: number;

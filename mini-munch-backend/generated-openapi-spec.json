@@ -819,6 +819,23 @@
           }
         }
       },
+      "OrderTable": {
+        "type": "object",
+        "required": [
+          "_id",
+          "tableNumber"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "tableNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        }
+      },
       "MenuItem": {
         "type": "object",
         "required": [
@@ -890,7 +907,7 @@
             "type": "string"
           },
           "table": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderTable"
           },
           "items": {
             "type": "array",
