@@ -42,8 +42,8 @@ export default function CustomerDashboard(): JSX.Element {
 
   // poll the current order every 5 seconds so the customer sees status changes
   useEffect(() => {
-    // if there is no order or the order is in DRAFT/READY status, do not poll
-    if (!order || order.status === "DRAFT" || order.status === "READY") return;
+    // if there is no order or the order is in DRAFT status, do not poll
+    if (!order || order.status === "DRAFT") return;
     const interval = setInterval(() => {
       void refreshOrder();
     }, 5000);
@@ -59,8 +59,8 @@ export default function CustomerDashboard(): JSX.Element {
       setLoading(true);
 
       // retrieve all menu items
-      const menuResponse = await getApiMenu();
-      setMenuItems(menuResponse.menuItems);
+      const getMenuResponse = await getApiMenu();
+      setMenuItems(getMenuResponse.menuItems);
 
       // create a DRAFT status order
       try {
@@ -103,6 +103,13 @@ export default function CustomerDashboard(): JSX.Element {
         await getApiOrdersTableTableNumber(parsedTableNumber);
       setOrder(getOrderResponse.order);
     } catch (error: unknown) {
+      if (
+        error instanceof AxiosError &&
+        error.response?.data?.code === "ORDER_NOT_FOUND"
+      ) {
+        // if the order has been deleted, navigate back to the table input page
+        navigate("/table-input", { replace: true });
+      }
       handleApiError(error, "Failed to refresh order. Please try again.");
     }
   }
@@ -148,14 +155,14 @@ export default function CustomerDashboard(): JSX.Element {
   }
 
   /**
-   * helper function to remove a menu item from the order completely
+   * helper function to delete a menu item from the order completely
+   * (if there is no existing order, the function will return early)
    */
-  async function handleRemoveItem(menuItemId: string): Promise<void> {
+  async function handleDeleteItem(menuItemId: string): Promise<void> {
     if (!order) return;
     try {
       await deleteApiOrdersIdItemsMenuItemId(order._id, menuItemId);
-
-      // the delete endpoint returns 204, so retrieve the updated order
+      // retrieve the updated order (+ total re-calculated) after deleting the item
       await refreshOrder();
     } catch (error: unknown) {
       handleApiError(
@@ -167,6 +174,7 @@ export default function CustomerDashboard(): JSX.Element {
 
   /**
    * helper function to submit the DRAFT status order
+   * (if there is no existing order, the function will return early)
    */
   async function handleSubmitOrder(): Promise<void> {
     if (!order) return;
@@ -182,7 +190,8 @@ export default function CustomerDashboard(): JSX.Element {
   }
 
   /**
-   * helper function to release the customer's table, delete their READY status order, and return to the table input page
+   * helper function to delete delete the customer's READY status order, release the table, and return to the table input page
+   * (if there is no existing order, the function will return early)
    */
   async function handleLeaveTable(): Promise<void> {
     try {
@@ -281,7 +290,7 @@ export default function CustomerDashboard(): JSX.Element {
 
                     <button
                       type="button"
-                      onClick={() => void handleRemoveItem(item.menuItem)}
+                      onClick={() => void handleDeleteItem(item.menuItem)}
                       disabled={order.status !== "DRAFT"}
                       className="cursor-pointer rounded-md bg-red-400 px-6 py-2 text-white text-md font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
