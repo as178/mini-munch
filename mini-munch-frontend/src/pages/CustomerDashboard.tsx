@@ -107,7 +107,10 @@ export default function CustomerDashboard(): JSX.Element {
         error instanceof AxiosError &&
         error.response?.data?.code === "ORDER_NOT_FOUND"
       ) {
-        // if the order has been deleted, navigate back to the table input page
+        // if the old "table session" is over, navigate back to the table input page
+        toast.success(
+          "Your table session has ended. To create a new order, please enter an available table number again.",
+        );
         navigate("/table-input", { replace: true });
       }
       handleApiError(error, "Failed to refresh order. Please try again.");
