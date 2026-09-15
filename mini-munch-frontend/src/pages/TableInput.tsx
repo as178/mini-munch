@@ -14,13 +14,7 @@ export default function TableInput(): JSX.Element {
 
   // function to send the table number to the backend to occupy the table
   async function handleOccupyTable(): Promise<void> {
-    const parsedTableNumber = Number(tableNumber);
-
-    // basic frontend validation before making the request
-    // if (tableNumber.trim() === "" || !Number.isInteger(parsedTableNumber)) {
-    //   toast.error("Please enter a valid table number.");
-    //   return;
-    // }
+    const parsedTableNumber = Number(tableNumber); // parse the table number input to a number
 
     // set loading state to true while the request is being processed
     setLoading(true);

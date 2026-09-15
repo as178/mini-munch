@@ -23,15 +23,9 @@ import handleApiError from "../utils/errorUtil";
 export default function CustomerDashboard(): JSX.Element {
   const navigate = useNavigate(); // router navigation hook
 
-  // retrieve the table number from the url
+  // retrieve the table number from the url parameters and parse it to a number
   const { tableNumber } = useParams();
-
-  // throw an notification error if it is missing + return
-  // (router will navigate to the table input page)
-  if (!tableNumber) {
-    toast.error("Table number is missing from the URL!");
-    return <></>;
-  }
+  const parsedTableNumber = Number(tableNumber);
 
   // state variables for menu items, current order, and loading state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -48,8 +42,8 @@ export default function CustomerDashboard(): JSX.Element {
 
   // poll the current order every 5 seconds so the customer sees status changes
   useEffect(() => {
-    // if there is no order or the order is in READY status, do not poll
-    if (!order || order.status === "READY") return;
+    // if there is no order or the order is in DRAFT/READY status, do not poll
+    if (!order || order.status === "DRAFT" || order.status === "READY") return;
     const interval = setInterval(() => {
       void refreshOrder();
     }, 5000);
@@ -71,7 +65,7 @@ export default function CustomerDashboard(): JSX.Element {
       // create a DRAFT status order
       try {
         const postOrderResponse = await postApiOrders({
-          tableNumber: Number(tableNumber),
+          tableNumber: parsedTableNumber,
         });
         setOrder(postOrderResponse.order);
       } catch (error: unknown) {
@@ -80,9 +74,8 @@ export default function CustomerDashboard(): JSX.Element {
           error instanceof AxiosError &&
           error.response?.data?.code === "ORDER_ALREADY_EXISTS"
         ) {
-          const getOrderResponse = await getApiOrdersTableTableNumber(
-            Number(tableNumber),
-          );
+          const getOrderResponse =
+            await getApiOrdersTableTableNumber(parsedTableNumber);
           setOrder(getOrderResponse.order);
         } else {
           throw error;
@@ -91,6 +84,11 @@ export default function CustomerDashboard(): JSX.Element {
       // catch any errors and set loading state to false after the data is loaded
     } catch (error: unknown) {
       handleApiError(error, "Failed to load customer data. Please try again.");
+
+      // if the error is not a server error, navigate back to the table input page
+      if (error instanceof AxiosError && error.response?.status !== 500) {
+        navigate("/table-input", { replace: true });
+      }
     } finally {
       setLoading(false);
     }
@@ -101,9 +99,8 @@ export default function CustomerDashboard(): JSX.Element {
    */
   async function refreshOrder(): Promise<void> {
     try {
-      const getOrderResponse = await getApiOrdersTableTableNumber(
-        Number(tableNumber),
-      );
+      const getOrderResponse =
+        await getApiOrdersTableTableNumber(parsedTableNumber);
       setOrder(getOrderResponse.order);
     } catch (error: unknown) {
       handleApiError(error, "Failed to refresh order. Please try again.");
@@ -191,7 +188,7 @@ export default function CustomerDashboard(): JSX.Element {
     try {
       if (!order) return;
       await deleteApiOrdersId(order._id);
-      await patchApiTablesTableNumberRelease(Number(tableNumber));
+      await patchApiTablesTableNumberRelease(parsedTableNumber);
       toast.success("Thank you for dining with Mini Munch!");
       navigate("/table-input");
     } catch (error: unknown) {
@@ -203,16 +200,7 @@ export default function CustomerDashboard(): JSX.Element {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-xl">Loading...</p>
-      </div>
-    );
-  }
-
-  // if the page is still loading, show a loading message
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-xl">Loading...</p>
+        <p className="text-3xl font-bold">Loading . . .</p>
       </div>
     );
   }
@@ -225,7 +213,9 @@ export default function CustomerDashboard(): JSX.Element {
           <div>
             <h1 className="text-3xl font-bold">Mini Munch</h1>
 
-            <p className="mt-1 text-xl text-gray-600">Table {tableNumber}</p>
+            <p className="mt-1 text-xl text-gray-600">
+              Table {parsedTableNumber}
+            </p>
           </div>
           <button
             type="button"
