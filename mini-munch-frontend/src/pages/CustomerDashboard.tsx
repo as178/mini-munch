@@ -50,6 +50,19 @@ export default function CustomerDashboard(): JSX.Element {
     return () => clearInterval(interval);
   }, [tableNumber, order]);
 
+  // poll the menu items every 7 seconds so the customer sees any changes to the menu
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const getMenuResponse = await getApiMenu();
+        setMenuItems(getMenuResponse.menuItems);
+      } catch (error: unknown) {
+        handleApiError(error, "Failed to refresh menu.");
+      }
+    }, 7000);
+    return () => clearInterval(interval);
+  }, []);
+
   /**
    * helper function to load the menu items
    * + the customer's existing order (or create a DRAFT status order otherwise)
