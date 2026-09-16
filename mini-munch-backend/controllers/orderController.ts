@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { AppError, createAppServiceError } from "../middleware/errorMiddleware";
+import { AppError, createAppServiceError } from "../utils/errorUtil";
 import {
   addOrderItem,
   createOrder,
