@@ -26,9 +26,9 @@ export const orderServiceErrors = {
     reason: "ORDER_NOT_DRAFT",
     message: "Order items can only be changed while the order status is DRAFT.",
   },
-  ORDER_NOT_READY: {
-    reason: "ORDER_NOT_READY",
-    message: "Only a READY order can be deleted.",
+  ORDER_CANNOT_BE_DELETED: {
+    reason: "ORDER_CANNOT_BE_DELETED",
+    message: "Only READY or DRAFT status orders can be deleted.",
   },
   INVALID_STATUS_TRANSITION: {
     reason: "INVALID_STATUS_TRANSITION",
@@ -55,7 +55,7 @@ export const orderHttpErrorResponses: Record<
   ORDER_NOT_FOUND: { statusCode: 404 },
   ORDER_ITEM_ALREADY_EXISTS: { statusCode: 409 },
   ORDER_NOT_DRAFT: { statusCode: 409 },
-  ORDER_NOT_READY: { statusCode: 409 },
+  ORDER_CANNOT_BE_DELETED: { statusCode: 409 },
   INVALID_STATUS_TRANSITION: { statusCode: 409 },
   ORDER_HAS_NO_ITEMS: { statusCode: 400 },
   ORDER_ITEM_NOT_FOUND: { statusCode: 404 },

@@ -311,7 +311,7 @@ router.get("/", getOrdersController);
  * /api/orders/{id}:
  *   delete:
  *     summary: Delete an order
- *     description: Deletes a READY status order. If successful, returns a success response with no content.
+ *     description: Deletes a DRAFT or READY status order. If successful, returns a success response with no content.
  *     tags:
  *       - Orders
  *     parameters:
@@ -328,7 +328,7 @@ router.get("/", getOrdersController);
  *       404:
  *         description: Order does not exist.
  *       409:
- *         description: Order status is not READY.
+ *         description: Order status is not DRAFT or READY.
  *       500:
  *         description: Unexpected server error.
  */

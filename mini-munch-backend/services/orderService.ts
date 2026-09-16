@@ -316,7 +316,7 @@ export async function getOrders(): Promise<
 }
 
 /**
- * deletes a READY status order
+ * deletes a READY or DRAFT status order
  * @param orderId the order document id
  * @returns a successful result with no content, or a failure result with a reason
  */
@@ -329,9 +329,12 @@ export async function deleteOrder(
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
 
-  // if the order is not in READY status, return a failure result with the appropriate reason
-  if (existingOrder.status !== "READY") {
-    return { success: false, serviceError: orderServiceErrors.ORDER_NOT_READY };
+  // if the order is not in READY or DRAFT status, return a failure result with the appropriate reason
+  if (existingOrder.status !== "READY" && existingOrder.status !== "DRAFT") {
+    return {
+      success: false,
+      serviceError: orderServiceErrors.ORDER_CANNOT_BE_DELETED,
+    };
   }
 
   // delete the order and return a successful result with no content

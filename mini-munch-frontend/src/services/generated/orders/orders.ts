@@ -122,7 +122,7 @@ export const patchApiOrdersIdStatus = (
       options);
     }
   /**
- * Deletes a READY status order. If successful, returns a success response with no content.
+ * Deletes a DRAFT or READY status order. If successful, returns a success response with no content.
  * @summary Delete an order
  */
 export const deleteApiOrdersId = (

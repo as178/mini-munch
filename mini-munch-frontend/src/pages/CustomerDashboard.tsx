@@ -207,7 +207,7 @@ export default function CustomerDashboard(): JSX.Element {
   }
 
   /**
-   * helper function to delete delete the customer's READY status order, release the table, and return to the table input page
+   * helper function to delete delete the customer's DRAFT or READY status order, release the table, and return to the table input page
    * (if there is no existing order, the function will return early)
    */
   async function handleLeaveTable(): Promise<void> {
@@ -246,7 +246,7 @@ export default function CustomerDashboard(): JSX.Element {
           <button
             type="button"
             onClick={() => void handleLeaveTable()}
-            disabled={order?.status !== "READY"} // disable the button if the order is not in READY status
+            disabled={order?.status !== "READY" && order?.status !== "DRAFT"} // disable the button if the order is not in READY or DRAFT status
             className="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white text-xl font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Leave Table
