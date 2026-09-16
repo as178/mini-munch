@@ -1,4 +1,4 @@
-import { AppError } from "../middleware/errorMiddleware";
+import { AppError } from "../utils/errorUtil";
 import mongoose from "mongoose";
 import type { OrderStatus } from "../models/Order";
 import { orderServiceErrors } from "../errors/orderErrors";
