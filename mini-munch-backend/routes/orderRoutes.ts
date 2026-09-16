@@ -18,7 +18,7 @@ const router = Router();
  * /api/orders:
  *   post:
  *     summary: Create a DRAFT status order
- *     description: Creates an empty DRAFT status order for an occupied table.
+ *     description: Creates an empty DRAFT status order for an occupied table. If successful, returns the created order document (consisting of the table reference, order items, total, preset DRAFT status and creation timestamp).
  *     tags:
  *       - Orders
  *     requestBody:
@@ -62,7 +62,7 @@ router.post("/", createOrderController);
  * /api/orders/table/{tableNumber}:
  *   get:
  *     summary: Get the order for a table
- *     description: Returns the current order for a table. Each table can have at most one order while it is occupied.
+ *     description: Retrieves the current order document for a table, which includes the table reference, order items, total, status and creation timestamp. Each table can have at most one order while it is occupied.
  *     tags:
  *       - Orders
  *     parameters:
@@ -99,7 +99,7 @@ router.get("/table/:tableNumber", getOrderByTableController);
  * /api/orders/{id}/items:
  *   post:
  *     summary: Add an order item to a DRAFT status order
- *     description: Adds an existing menu item to the order and stores its current name and price as a snapshot. Deleted menu items cannot be added to new orders.
+ *     description: Adds an existing menu item to the order and stores its current name and price as a snapshot. If successful, returns the updated order document (which includes the table reference, order items, total, status and creation timestamp) with the added menu item included. Deleted menu items cannot be added to new orders.
  *     tags:
  *       - Orders
  *     parameters:
@@ -147,7 +147,7 @@ router.post("/:id/items", addOrderItemController);
  * /api/orders/{id}/items/{menuItemId}:
  *   patch:
  *     summary: Change an order item quantity
- *     description: Changes the quantity of an existing order item in a DRAFT order. The item can remain in the order even if it has been removed from the menu.
+ *     description: Changes the quantity of an existing order item in a DRAFT order. If successful, returns the updated order document (which includes the table reference, order items, total, status and creation timestamp) with the updated order item quality. The item can remain in the order even if it has been removed from the menu.
  *     tags:
  *       - Orders
  *     parameters:
@@ -202,7 +202,7 @@ router.patch("/:id/items/:menuItemId", updateOrderItemController);
  * /api/orders/{id}/items/{menuItemId}:
  *   delete:
  *     summary: Remove an order item from a DRAFT status order
- *     description: Removes an order item by menu item ID. This works from the stored snapshot even if the menu item was deleted.
+ *     description: Removes an order item by menu item ID (even if it has been removed from the menu). If successful, returns a success response with no content.
  *     tags:
  *       - Orders
  *     parameters:
@@ -235,7 +235,7 @@ router.delete("/:id/items/:menuItemId", removeOrderItemController);
  * /api/orders/{id}/status:
  *   patch:
  *     summary: Update an order status
- *     description: Updates an order through the valid workflow transitions DRAFT to SUBMITTED, SUBMITTED to PREPARING, and PREPARING to READY.
+ *     description: Updates an order through the valid workflow transitions DRAFT to SUBMITTED, SUBMITTED to PREPARING, and PREPARING to READY. If successful, returns the updated order document (which includes the table reference, order items, total, status and creation timestamp) with the updated order status.
  *     tags:
  *       - Orders
  *     parameters:
@@ -284,7 +284,7 @@ router.patch("/:id/status", updateOrderStatusController);
  * /api/orders:
  *   get:
  *     summary: Get all orders for the staff dashboard
- *     description: Returns SUBMITTED, PREPARING, and READY orders for the staff dashboard.
+ *     description: If successful, returns all SUBMITTED, PREPARING, and READY orders for the staff dashboard (an array of order documents, each including the table reference, order items, total, status and creation timestamp), or an empty array if no such orders exist.
  *     tags:
  *       - Orders
  *     responses:
@@ -311,7 +311,7 @@ router.get("/", getOrdersController);
  * /api/orders/{id}:
  *   delete:
  *     summary: Delete an order
- *     description: Deletes a READY status order.
+ *     description: Deletes a READY status order. If successful, returns a success response with no content.
  *     tags:
  *       - Orders
  *     parameters:

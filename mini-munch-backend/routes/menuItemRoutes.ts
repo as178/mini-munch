@@ -14,7 +14,7 @@ const router = Router();
  * /api/menu:
  *   get:
  *     summary: Retrieve all menu items
- *     description: Retrieves all menu item documents (or an empty array if no menu items exist).
+ *     description: If successful, retrieves all menu item documents (or an empty array if no menu items exist) consisting of an array menu items, each containing the menu item ID, name, description, and price.
  *     tags:
  *       - Menu Items
  *     responses:
@@ -76,7 +76,7 @@ router.get("/:id", getMenuItemController);
  * /api/menu:
  *   post:
  *     summary: Create a new menu item
- *     description: Creates a new menu item document with the provided name, description, and price. If successful, returns the created menu item document.
+ *     description: Creates a new menu item document with the provided name, description, and price. If successful, returns the created menu item document (consisting of the menu item ID, name, description, and price).
  *     tags:
  *       - Menu Items
  *     requestBody:

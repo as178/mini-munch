@@ -19,7 +19,8 @@ const options: swaggerJSDoc.Options = {
     info: {
       title: "MiniMunch API",
       version: "1.0.0",
-      description: "API for the MiniMunch restaurant ordering system!",
+      description:
+        "API and Schema for the MiniMunch restaurant ordering system!",
     },
     servers: [
       {

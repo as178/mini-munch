@@ -51,7 +51,7 @@ router.get("/:tableNumber", getTableController);
  * /api/tables/{tableNumber}/occupy:
  *   patch:
  *     summary: Occupy a table by its number
- *     description: Checks table availability and occupies the table if it is available. If successful, returns the updated table document.
+ *     description: Checks table availability and occupies the table if it is available. If successful, returns the updated table document (consisting of the table ID, table number, and availability status).
  *     tags:
  *       - Tables
  *     parameters:
@@ -91,7 +91,7 @@ router.patch("/:tableNumber/occupy", occupyTableController);
  * /api/tables/{tableNumber}/release:
  *   patch:
  *     summary: Release a table from being occupied by its number
- *     description: Checks table availability and releases the table if it is occupied. If successful, returns the updated table document.
+ *     description: Checks table availability and releases the table if it is occupied. If successful, returns the updated table document (consisting of the table ID, table number, and availability status).
  *     tags:
  *       - Tables
  *     parameters:
