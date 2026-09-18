@@ -29,13 +29,7 @@ export async function getTableController(
       return;
     }
 
-    res.status(200).json({
-      table: {
-        id: tableServiceResult.data._id,
-        tableNumber: tableServiceResult.data.tableNumber,
-        available: tableServiceResult.data.available,
-      },
-    });
+    res.status(200).json({ table: tableServiceResult.data });
 
     // catch any unexpected errors and pass them to the global error middleware
   } catch (error: unknown) {
@@ -70,14 +64,7 @@ export async function occupyTableController(
     }
 
     // else, return a success response with the occupied table document
-    res.status(200).json({
-      message: `Table ${tableServiceResult.data.tableNumber} has been occupied.`,
-      table: {
-        id: tableServiceResult.data._id,
-        tableNumber: tableServiceResult.data.tableNumber,
-        available: tableServiceResult.data.available,
-      },
-    });
+    res.status(200).json({ table: tableServiceResult.data });
 
     // catch any unexpected errors and pass them to the global error middleware
   } catch (error: unknown) {
@@ -112,14 +99,7 @@ export async function releaseTableController(
     }
 
     // else, return a success response with the released table document
-    res.status(200).json({
-      message: `Table ${tableServiceResult.data.tableNumber} has been released.`,
-      table: {
-        id: tableServiceResult.data._id,
-        tableNumber: tableServiceResult.data.tableNumber,
-        available: tableServiceResult.data.available,
-      },
-    });
+    res.status(200).json({ table: tableServiceResult.data });
 
     // catch any unexpected errors and pass them to the global error middleware
   } catch (error: unknown) {

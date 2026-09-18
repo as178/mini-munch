@@ -12,7 +12,7 @@ const router = Router();
  * @openapi
  * /api/tables/{tableNumber}:
  *   get:
- *     summary: Retrieve a table by its number
+ *     summary: Retrieve a table by its number (currently not in use by the frontend client)
  *     description: Retrieves the table document which includes the table ID, table number, and availability status, if successful.
  *     tags:
  *       - Tables

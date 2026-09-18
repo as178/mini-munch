@@ -40,7 +40,7 @@ router.get("/", getAllMenuItemsController);
  * @openapi
  * /api/menu/{id}:
  *   get:
- *     summary: Retrieve a menu item by its ID
+ *     summary: Retrieve a menu item by its ID (currently not in use by the frontend client)
  *     description: Retrieves the menu item document which includes the menu item ID, name, description, and price, if successful.
  *     tags:
  *       - Menu Items

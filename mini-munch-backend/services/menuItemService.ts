@@ -68,8 +68,27 @@ export async function createMenuItem(
     };
   }
 
+  // validate the name, description, and price follow business rules
+  if (2 > name.length || name.length > 50) {
+    return {
+      success: false,
+      serviceError: menuItemServiceErrors.MENU_ITEM_INVALID_NAME,
+    };
+  }
+  if (5 > description.length || description.length > 150) {
+    return {
+      success: false,
+      serviceError: menuItemServiceErrors.MENU_ITEM_INVALID_DESCRIPTION,
+    };
+  }
+  if (price < 0) {
+    return {
+      success: false,
+      serviceError: menuItemServiceErrors.MENU_ITEM_INVALID_PRICE,
+    };
+  }
+
   // else, create a new menu item document with the parameters
-  // (business logic validation is handled through the schema validators in the MenuItem model)
   const menuItem = await MenuItemModel.create({
     name,
     description,
