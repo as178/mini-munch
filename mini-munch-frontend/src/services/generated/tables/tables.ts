@@ -19,7 +19,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   /**
  * Retrieves the table document which includes the table ID, table number, and availability status, if successful.
- * @summary Retrieve a table by its number
+ * @summary Retrieve a table by its number (currently not in use by the frontend client)
  */
 export const getApiTablesTableNumber = (
     tableNumber: number,

@@ -46,7 +46,7 @@ export const postApiMenu = (
     }
   /**
  * Retrieves the menu item document which includes the menu item ID, name, description, and price, if successful.
- * @summary Retrieve a menu item by its ID
+ * @summary Retrieve a menu item by its ID (currently not in use by the frontend client)
  */
 export const getApiMenuId = (
     id: string,

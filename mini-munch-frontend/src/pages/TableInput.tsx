@@ -54,11 +54,12 @@ export default function TableInput(): JSX.Element {
           </label>
 
           <input
-            id="table-number"
             type="number"
+            value={tableNumber}
+            required
             min="1"
             max="20"
-            value={tableNumber}
+            step="1"
             onChange={(event) => setTableNumber(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
