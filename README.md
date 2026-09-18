@@ -10,7 +10,7 @@
 
 - **Terminal**: to run the commands from
 
-- **Node.js (+ npm)**: to run the program (exact version specified in `mini-munch-backend/package.json`)
+- **Node.js (+ npm)**: to run the program
 
 <hr style="margin: 30px 0;" />
 
