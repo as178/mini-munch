@@ -113,4 +113,4 @@ For the best experience, keep both of the tabs open next to each other.
 
 ### Known Limitations/Unresolved Problems
 
-There is no authentication, thus pages may be accessed freely as described above. Additionally, concurrency and atomic database operations are not handled properly by the backend.
+There is no authentication, thus pages (and APIs) may be accessed freely as described above. Additionally, concurrency and atomic database operations are not handled properly by the backend.
