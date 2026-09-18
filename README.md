@@ -10,7 +10,7 @@
 
 - **Terminal**: to run the commands from
 
-- **Node.js (+ npm)**: to run the program (exact version specified in `mini-munch-backend\package.json`)
+- **Node.js (+ npm)**: to run the program (exact version specified in `mini-munch-backend/package.json`)
 
 <hr style="margin: 30px 0;" />
 
@@ -19,7 +19,7 @@
 1. Open a terminal and change to the root Mini Munch directory:
 
    ```bash
-   cd .\mini-munch\
+   cd ./mini-munch/
    ```
 
 2. Install the frontend and backend dependencies:
@@ -64,7 +64,7 @@ You will be able to see a list of all the available endpoints, representing main
 
 Click on any endpoint, and then click the "**Try it out**" button to test main functionalities and error handling by typing in and submitting your own values.
 
-❗❗❗ _> The port `5001` is derived from the backend environment file for ease of configuration. Change the URL port accordingly if you modified the environment file. Update the frontend environment file accordingly. Ensure that you have [rerun the backend](#backend-instruction) (you will see changes applied in `mini-munch-backend\generated-openapi-spec.json`) and regenerated the client API by running the following command from the root Mini Munch directory:_
+❗❗❗ _> The port `5001` is derived from the backend environment file for ease of configuration. Change the URL port accordingly if you modified the environment file. Update the frontend environment file accordingly. Ensure that you have [rerun the backend](#backend-instruction) (you will see changes applied in `mini-munch-backend/generated-openapi-spec.json`) and regenerated the client API by running the following command from the root Mini Munch directory:_
 
 ```bash
 npm run frontend-orval
