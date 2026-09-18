@@ -319,7 +319,7 @@ export default function CustomerDashboard(): JSX.Element {
                   <div className="mt-3 flex items-center gap-3 border-t border-gray-300 pt-4">
                     <button
                       type="button"
-                      disabled={order.status !== "DRAFT" || item.quantity === 1} // disable button if status is not DRAFT or quantity is 1 (cannot go below 1)
+                      disabled={order.status !== "DRAFT" || item.quantity <= 1} // disable button if status is not DRAFT or quantity is less than 1
                       onClick={() =>
                         void handleUpdateQuantity(
                           item.menuItem,
@@ -336,7 +336,7 @@ export default function CustomerDashboard(): JSX.Element {
                     <button
                       type="button"
                       disabled={
-                        order.status !== "DRAFT" || item.quantity === 10 // disable button if status is not DRAFT or quantity is 10 (cannot go above 10)
+                        order.status !== "DRAFT" || item.quantity >= 10 // disable button if status is not DRAFT or quantity is bigger than 10
                       }
                       onClick={() =>
                         void handleUpdateQuantity(
