@@ -10,31 +10,39 @@
 
 - **Terminal**: to run the commands from
 
-- **Node.js (+ npm)**: to run the program
+- **Git**: to clone the repository
+
+- **Node.js (+ npm)**: to run the system
 
 <hr style="margin: 30px 0;" />
 
 ### Setup & Installation Instructions
 
-1. Open a terminal and change to the root Mini Munch directory:
+1. Clone the repository onto your local machine:
+
+   ```bash
+   git clone https://github.com/as178/mini-munch.git
+   ```
+
+2. Open a terminal and change to the root Mini Munch directory:
 
    ```bash
    cd ./mini-munch/
    ```
 
-2. Install the frontend and backend dependencies:
+3. Install the frontend and backend dependencies:
 
    ```bash
    npm run install-all
    ```
 
-3. From the same terminal (or a new terminal), <a id="backend-instruction"></a> run the backend:
+4. From the same terminal (or a new terminal), <a id="backend-instruction"></a> run the backend:
 
    ```bash
    npm run backend
    ```
 
-4. Open another terminal and run the frontend (in development mode). This will host the frontend on `http://localhost:5173/`
+5. Open another terminal and run the frontend (in development mode). This will host the frontend on `http://localhost:5173/`
 
    ```bash
    npm run frontend
