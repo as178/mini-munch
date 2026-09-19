@@ -24,7 +24,7 @@
    git clone https://github.com/as178/mini-munch.git
    ```
 
-2. Open a terminal and change to the root Mini Munch directory:
+2. Change to the root Mini Munch directory:
 
    ```bash
    cd ./mini-munch/
