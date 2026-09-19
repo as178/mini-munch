@@ -59,6 +59,10 @@ const orderItemSchema = new Schema<OrderItem>(
       required: [true, "Menu item quantity is required."],
       min: [1, "Menu item quantity must be at least 1."],
       max: [10, "Menu item quantity cannot exceed 10."],
+      validate: {
+        validator: Number.isInteger,
+        message: "Menu item quantity must be a whole number.",
+      },
     },
   },
 

@@ -189,7 +189,7 @@ export async function updateOrderItem(
   quantity: number,
 ): Promise<OrderServiceResult> {
   // if quantity is invalid, return a failure result with the appropriate reason
-  if (1 > quantity || quantity > 10) {
+  if (!Number.isInteger(quantity) || 1 > quantity || quantity > 10) {
     return {
       success: false,
       serviceError: orderServiceErrors.INVALID_QUANTITY,
