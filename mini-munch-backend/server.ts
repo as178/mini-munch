@@ -139,12 +139,10 @@ wss.on('connection', (ws) => {
 
   // close event handler
   ws.on('close', () => {
-    for (const [topic, clientSet] of subscriptions.entries()) {
-      clientSet.delete(ws);
-
-      if (clientSet.size === ws) {
+    for (const [topic, wsConnection] of subscriptions.entries()) {
+      if (wsConnection === ws) {
         subscriptions.delete(topic);
-        console.log('Client disconnected and cleaned up');
+        console.log(`Client disconnected and unsubscribed from: ${topic}`);
       }
     }
   });
