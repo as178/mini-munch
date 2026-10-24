@@ -9,6 +9,7 @@ import { errorMiddleware } from "./middleware/errorMiddleware";
 import tableRoutes from "./routes/tableRoutes";
 import menuItemRoutes from "./routes/menuItemRoutes";
 import orderRoutes from "./routes/orderRoutes";
+import { getTable } from "./services/tableService";
 
 // load environment variable from .env file
 dotenv.config();
@@ -57,7 +58,7 @@ wss.on('connection', (ws) => {
   ws.send('Welcome to the Mini-Munch WSS server!');
 
   // message event handler
-  ws.on('message', (rawData) => {
+  ws.on('message', async (rawData) => {
     try {
       const { type, payload } = JSON.parse(String(rawData));
 
@@ -70,10 +71,20 @@ wss.on('connection', (ws) => {
             subscriptions.set(subTable, ws);
             console.log(`Client subscribed to: ${subTable}`);
 
-            // send ack back to client 
-            ws.send(JSON.stringify({ 
-            type: 'subscribed', 
-            payload: { topic: subTable }}));
+            const tableServiceResult = await getTable(subTable);
+
+            if (!tableServiceResult.success) {
+              console.log(`Table is occupied ${subTable}`);
+              
+              ws.send(JSON.stringify({ 
+              type: 'error', 
+              payload: { message: `Table is occupied ${subTable}` }}));
+              return;
+            }
+              // send ack back to client 
+              ws.send(JSON.stringify({ 
+              type: 'subscribed', 
+              payload: { topic: subTable }}));
           } else {
             console.log(`Client already subscribed to table ${subTable}`);
             
