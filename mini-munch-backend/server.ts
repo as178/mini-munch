@@ -44,7 +44,7 @@ app.listen(Number(PORT), "0.0.0.0", () => {
 });
 
 // create websocket and on specified port
-const wss = new WebSocketServer({ port:  Number(WSS_PORT) });  
+const wss = new WebSocketServer({ port: Number(WSS_PORT) });  
 console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
 
 // map to keep track of topics, in our case tabls
@@ -60,6 +60,7 @@ wss.on('connection', (ws) => {
   // message event handler
   ws.on('message', async (rawData) => {
     try {
+      //covert socket data into JSON
       const { type, payload } = JSON.parse(String(rawData));
 
       switch (type) {
@@ -72,6 +73,7 @@ wss.on('connection', (ws) => {
           if (!tableServiceResult.success) {
             console.log(tableServiceResult.serviceError);
             
+            //send error though socket
             ws.send(JSON.stringify({ 
             type: 'error', 
             payload: { message: tableServiceResult.serviceError }}));
@@ -79,56 +81,63 @@ wss.on('connection', (ws) => {
           }
 
           // check if there is an exsisting socket
-          if (!subscriptions.has(subTable)) {
-            const table = tableServiceResult.data;
-
-            // if table occupied, then create web socket
-            if (!table.available){
-              subscriptions.set(subTable, ws);
-              console.log(`Client subscribed to: ${subTable}`);
-              
-              // send ack back to client with table data 
-              ws.send(JSON.stringify({ 
-              type: 'subscribed', 
-              payload: { 
-                topic: subTable, 
-                table: tableServiceResult.data
-              }}));
-
-            } else {
-              // table is not occupied, user should occupy table first
-              console.log(`Table ${subTable} is not occupied, can't bind ws`);
-              
-              ws.send(JSON.stringify({ 
-                type: 'error', 
-                payload: { message: `Table ${subTable} is not occupied, can't bind ws` }
-              }));
-            }
-          } else {
+          if (subscriptions.has(subTable)) {
+            // log error for table already having socket bound
             console.log(`Table ${subTable} already has a ws`);
             
+            // pass error though socket
             ws.send(JSON.stringify({ 
             type: 'error', 
             payload: { message: `Table ${subTable} already has a ws ` }}));
+            return;
+          }          
+
+          const table = tableServiceResult.data;
+          // if table occupied, then create web socket
+          if (!table.available){
+            subscriptions.set(subTable, ws);
+            console.log(`Client subscribed to: ${subTable}`);
+            
+            // send ack back to client with table data 
+            ws.send(JSON.stringify({ 
+            type: 'subscribed', 
+            payload: { 
+              topic: subTable, 
+              table: tableServiceResult.data
+            }}));
+          } else {
+            // table is not occupied, user should occupy table first
+            console.log(`Table ${subTable} is not occupied, can't bind ws`);
+            
+            // send message though socket
+            ws.send(JSON.stringify({ 
+              type: 'error', 
+              payload: { message: `Table ${subTable} is not occupied, can't bind ws` }
+            }));
           }
           break; 
       
         // handle un-subscription event
         case 'unsubscribe':
+
+          // get topic to unsub from
           const unsubTable = payload.table;
 
+          // check for topic and delete it form the subscription 
           if(subscriptions.has(unsubTable)) {
-
             subscriptions.delete(unsubTable);
 
+            // log the change
             console.log(`Client unsubscribed from: ${unsubTable}`);
 
+            // send the change to the client
             ws.send(JSON.stringify({ 
             type: 'unsubscribed', 
             payload: { message: `Client has unsubscribed from table ${unsubTable}` }}));
           }
           break;
 
+        // fall back for unknow events
         default:
           console.warn(`Unknown event type: ${type}`);
       }
