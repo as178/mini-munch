@@ -1,4 +1,4 @@
-import express, { type Application } from "express";
+import express, { raw, type Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import WebSocket, { WebSocketServer } from 'ws';
@@ -46,18 +46,76 @@ app.listen(Number(PORT), "0.0.0.0", () => {
 const wss = new WebSocketServer({ port:  Number(WSS_PORT) });  
 console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
 
+// map to keep track of topics, in our case tabls
+const subscriptions = new Map();
+
 // wss connection event handler 
 wss.on('connection', (ws) => {
-  console.log('New WSS client connected');
+  console.log('New WS client connected');
 
   // send welcome message to client
   ws.send('Welcome to the Mini-Munch WSS server!');
 
   // message event handler
-  ws.on('message', (message) => {
-    console.log(`Received: ${message}`);
-    // Echo the message back to the client
-    ws.send(`Server received: ${message}`);
+  ws.on('message', (rawData) => {
+    try {
+      const { type, payload } = JSON.parse(String(rawData));
+
+      switch (type) {
+        // handle subscription event
+        case 'subscribe':
+          const subTable = payload.table;
+
+          if (!subscriptions.has(subTable)) {
+            subscriptions.set(subTable, new Set());
+          }
+
+          subscriptions.get(subTable).add(ws);
+          console.log(`Client subscribed to: ${subTable}`);
+
+          // send ack back to client 
+          ws.send(JSON.stringify({ 
+            type: 'subscribed', 
+            payload: { topic: subTable }}));
+          break; 
+      
+        // handle un-subscription event
+        case 'unsubscribe':
+
+          const unsubTable = payload.topic;
+
+          if(subscriptions.has(unsubTable)) {
+            subscriptions.get(unsubTable).delete(ws);
+            console.log(`Client unsubscribed from: ${unsubTable}`);
+          }
+
+          break;
+
+        // handle publish / event creation
+        case 'publish': 
+          const pubTable = payload.table;
+          const eventData = payload.data;
+
+          // Broadcast to all clients subscribed to this table
+          if (subscriptions.has(pubTable)) {
+            const message = JSON.stringify({
+              type: 'event',
+              payload: { topic: pubTable, data: eventData } 
+            });
+
+            // subscriptions.get(pubTable).array.forEach(cleint => {
+            //   if cleint.readyState === cleint.OPEN) {
+            //     cleint.send(message); 
+            // });
+          }
+          break; 
+
+        default:
+          console.warn(`Unknown event type: ${type}`);
+      }
+    } catch (err) {
+      console.error('Failed to parse WSS message: ', err);
+    }
   });
 
   // close event handler
