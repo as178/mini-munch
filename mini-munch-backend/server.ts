@@ -67,48 +67,37 @@ wss.on('connection', (ws) => {
           const subTable = payload.table;
 
           if (!subscriptions.has(subTable)) {
-            subscriptions.set(subTable, new Set());
-          }
+            subscriptions.set(subTable, ws);
+            console.log(`Client subscribed to: ${subTable}`);
 
-          subscriptions.get(subTable).add(ws);
-          console.log(`Client subscribed to: ${subTable}`);
-
-          // send ack back to client 
-          ws.send(JSON.stringify({ 
+            // send ack back to client 
+            ws.send(JSON.stringify({ 
             type: 'subscribed', 
             payload: { topic: subTable }}));
+          } else {
+            console.log(`Client already subscribed to table ${subTable}`);
+            
+            ws.send(JSON.stringify({ 
+            type: 'error', 
+            payload: { message: `Client already subscribed to table ${subTable}` }}));
+          }
           break; 
       
         // handle un-subscription event
         case 'unsubscribe':
-
-          const unsubTable = payload.topic;
+          const unsubTable = payload.table;
 
           if(subscriptions.has(unsubTable)) {
-            subscriptions.get(unsubTable).delete(ws);
+
+            subscriptions.delete(unsubTable);
+
             console.log(`Client unsubscribed from: ${unsubTable}`);
-          }
 
+            ws.send(JSON.stringify({ 
+            type: 'unsubscribed', 
+            payload: { message: `Client has unsubscribed from table ${unsubTable}` }}));
+          }
           break;
-
-        // handle publish / event creation
-        case 'publish': 
-          const pubTable = payload.table;
-          const eventData = payload.data;
-
-          // Broadcast to all clients subscribed to this table
-          if (subscriptions.has(pubTable)) {
-            const message = JSON.stringify({
-              type: 'event',
-              payload: { topic: pubTable, data: eventData } 
-            });
-
-            // subscriptions.get(pubTable).array.forEach(cleint => {
-            //   if cleint.readyState === cleint.OPEN) {
-            //     cleint.send(message); 
-            // });
-          }
-          break; 
 
         default:
           console.warn(`Unknown event type: ${type}`);
@@ -120,14 +109,13 @@ wss.on('connection', (ws) => {
 
   // close event handler
   ws.on('close', () => {
-    for (const [topic, clients] of subscriptions.entries()) {
-      if (clients.has(ws)) {
-        clients.delete(ws);
-        if (clients.size === 0) {
-          subscriptions.delete(topic);
-        }
+    for (const [topic, clientSet] of subscriptions.entries()) {
+      clientSet.delete(ws);
+
+      if (clientSet.size === ws) {
+        subscriptions.delete(topic);
+        console.log('Client disconnected and cleaned up');
       }
     }
-    console.log('Client disconnected and cleaned up');
   });
 })
