@@ -66,31 +66,50 @@ wss.on('connection', (ws) => {
         // handle subscription event
         case 'subscribe':
           const subTable = payload.table;
+          const tableServiceResult = await getTable(Number(subTable));
 
-          if (!subscriptions.has(subTable)) {
-            subscriptions.set(subTable, ws);
-            console.log(`Client subscribed to: ${subTable}`);
-
-            const tableServiceResult = await getTable(subTable);
-
-            if (!tableServiceResult.success) {
-              console.log(`Table is occupied ${subTable}`);
-              
-              ws.send(JSON.stringify({ 
-              type: 'error', 
-              payload: { message: `Table is occupied ${subTable}` }}));
-              return;
-            }
-              // send ack back to client 
-              ws.send(JSON.stringify({ 
-              type: 'subscribed', 
-              payload: { topic: subTable }}));
-          } else {
-            console.log(`Client already subscribed to table ${subTable}`);
+          //check if there was an error getting the table
+          if (!tableServiceResult.success) {
+            console.log(tableServiceResult.serviceError);
             
             ws.send(JSON.stringify({ 
             type: 'error', 
-            payload: { message: `Client already subscribed to table ${subTable}` }}));
+            payload: { message: tableServiceResult.serviceError }}));
+            return;
+          }
+
+          // check if there is an exsisting socket
+          if (!subscriptions.has(subTable)) {
+            const table = tableServiceResult.data;
+
+            // if table occupied, then create web socket
+            if (!table.available){
+              subscriptions.set(subTable, ws);
+              console.log(`Client subscribed to: ${subTable}`);
+              
+              // send ack back to client with table data 
+              ws.send(JSON.stringify({ 
+              type: 'subscribed', 
+              payload: { 
+                topic: subTable, 
+                table: tableServiceResult.data
+              }}));
+
+            } else {
+              // table is not occupied, user should occupy table first
+              console.log(`Table ${subTable} is not occupied, can't bind ws`);
+              
+              ws.send(JSON.stringify({ 
+                type: 'error', 
+                payload: { message: `Table ${subTable} is not occupied, can't bind ws` }
+              }));
+            }
+          } else {
+            console.log(`Table ${subTable} already has a ws`);
+            
+            ws.send(JSON.stringify({ 
+            type: 'error', 
+            payload: { message: `Table ${subTable} already has a ws ` }}));
           }
           break; 
       
