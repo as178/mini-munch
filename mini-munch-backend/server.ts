@@ -120,6 +120,14 @@ wss.on('connection', (ws) => {
 
   // close event handler
   ws.on('close', () => {
-    console.log('Client disconnected');
+    for (const [topic, clients] of subscriptions.entries()) {
+      if (clients.has(ws)) {
+        clients.delete(ws);
+        if (clients.size === 0) {
+          subscriptions.delete(topic);
+        }
+      }
+    }
+    console.log('Client disconnected and cleaned up');
   });
 })
