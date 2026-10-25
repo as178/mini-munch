@@ -44,8 +44,10 @@ app.listen(Number(PORT), "0.0.0.0", () => {
 });
 
 // create websocket and on specified port
-const wss = new WebSocketServer({ port: Number(WSS_PORT) });  
-console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
+const wss = new WebSocketServer({ port: Number(WSS_PORT) }); 
+wss.on('listening', () => {
+  console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
+})
 
 // map to keep track of topics, in our case tabls
 const subscriptions = new Map();
