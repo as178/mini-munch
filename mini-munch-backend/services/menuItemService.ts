@@ -1,6 +1,7 @@
 import { menuItemServiceErrors } from "../errors/menuItemErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
 import type { ServiceResult } from "./serviceResult";
+import { sendDataToAllTablesWS } from "../server";
 
 // defined type for the reasons a menu item service function can fail
 export type MenuItemServiceFailureReason =
@@ -95,6 +96,9 @@ export async function createMenuItem(
     price,
   });
 
+  // send update to WS
+  sendDataToAllTablesWS({ message: 'Menu Updated' });
+
   // return a success result with the created menu item document
   return { success: true, data: menuItem };
 }
@@ -117,6 +121,9 @@ export async function deleteMenuItem(
 
   // delete the menu item document from the database
   await menuItemToBeDeleted.data.deleteOne();
+
+  // send update to WS
+  sendDataToAllTablesWS({ message: 'Menu Updated' });
 
   // return a success result with no content
   return { success: true, data: undefined };

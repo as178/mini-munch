@@ -1,7 +1,6 @@
-import express, { raw, type Application } from "express";
+import express, { type Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import WebSocket, { WebSocketServer } from 'ws';
 import { connectToDatabase } from "./config/database";
 import swaggerUi from "swagger-ui-express";
 import { swagger } from "./config/swagger";
@@ -9,6 +8,7 @@ import { errorMiddleware } from "./middleware/errorMiddleware";
 import tableRoutes from "./routes/tableRoutes";
 import menuItemRoutes from "./routes/menuItemRoutes";
 import orderRoutes from "./routes/orderRoutes";
+import { WebSocketServer } from "ws";
 import { getTable } from "./services/tableService";
 
 // load environment variable from .env file
@@ -43,11 +43,11 @@ app.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`server on http://localhost:${PORT}`);
 });
 
-// create websocket and on specified port
-const wss = new WebSocketServer({ port: Number(WSS_PORT) }); 
-wss.on('listening', () => {
-  console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
-})
+// Start the WebSocket server
+  const wss = new WebSocketServer({ port: Number(WSS_PORT) }); 
+  wss.on('listening', () => {
+    console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
+  })
 
 // map to keep track of topics, in our case tabls
 const subscriptions = new Map();
@@ -70,6 +70,22 @@ wss.on('connection', (ws) => {
         case 'subscribe':
           const subTable = payload.table;
           const tableServiceResult = await getTable(Number(subTable));
+
+          // table 0 is for staff, should recive all websocket data
+          if (subTable === '0') {
+            subscriptions.set(subTable, ws);
+            console.log(`Client subscribed to staff table (table 0)`);
+            
+            // send ack back to client with table data 
+            ws.send(JSON.stringify({ 
+              type: 'subscribed', 
+              payload: { 
+                topic: subTable, 
+                message: `Subscribed to table ${subTable}, will recive all events`
+              }
+            }));
+            return;
+          }
 
           //check if there was an error getting the table
           if (!tableServiceResult.success) {
@@ -158,3 +174,28 @@ wss.on('connection', (ws) => {
     }
   });
 })
+
+// Function to send data to specific tables and table 0
+export function sendDataToSelectTablesWS(tables: string[], data: any) {
+  const jsonData = JSON.stringify(data);
+
+  // iterate through the subscriptions map
+  for (const [topic, wsConnection] of subscriptions.entries()) {
+    // check if the topic is in the list of tables or if it's table 0
+    if (tables.includes(topic) || topic === '0') {
+      // Send the data to the websocket
+      wsConnection.send(jsonData);
+    }
+  }
+}
+
+// Function to send data to all tables, for menu updates
+export function sendDataToAllTablesWS(data: any) {
+  const jsonData = JSON.stringify(data);
+
+  // iterate through the subscriptions map
+  for (const [topic, wsConnection] of subscriptions.entries()) {
+    // Send the data to the websocket
+    wsConnection.send(jsonData);
+  }
+}
