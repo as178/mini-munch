@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.mini_munch_android.ui.theme.MunchBlue
 
 // table input page
@@ -38,7 +37,7 @@ fun TableEntryScreen() {
         // instructions for customer
         Text(
             text = "Please enter your table number below.",
-            fontSize = 16.sp
+            style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(32.dp))
     }
