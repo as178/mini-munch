@@ -52,7 +52,7 @@ export async function startWSServer(WSS_PORT: number) {
         switch (type) {
           // handle subscription event
           case 'subscribe':
-            const subTable = topic;
+            const subTable = Number(topic);
 
           // check if topic is a number
           if (!Number.isInteger(subTable)) {
@@ -69,7 +69,7 @@ export async function startWSServer(WSS_PORT: number) {
             const tableServiceResult = await getTable(Number(subTable));
 
             // table 0 is for staff, should recive all websocket data
-            if (subTable === '0') {
+            if (subTable === 0) {
               subscriptions.set(subTable, ws);
               console.log(`Client subscribed to staff table (table 0)`);
               
