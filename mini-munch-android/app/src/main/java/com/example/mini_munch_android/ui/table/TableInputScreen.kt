@@ -17,7 +17,7 @@ import com.example.mini_munch_android.ui.theme.MunchBlue
 
 // table input page
 @Composable
-fun TableEntryScreen() {
+fun TableInputScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()

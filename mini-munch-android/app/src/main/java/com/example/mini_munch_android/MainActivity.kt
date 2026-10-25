@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.mini_munch_android.ui.table.TableEntryScreen
+import com.example.mini_munch_android.ui.table.TableInputScreen
 
 // entry to the android app
 class MainActivity : ComponentActivity() {
@@ -12,7 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TableEntryScreen()
+            TableInputScreen()
         }
     }
 }
