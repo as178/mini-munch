@@ -15,6 +15,10 @@ import {
   postApiMenu,
 } from "../services/generated";
 import handleApiError from "../utils/errorUtil";
+import { createWebSocketServiceInstance } from "../services/webSocketService";
+
+// cerate websocket
+const wsService = createWebSocketServiceInstance('ws://localhost:5002');
 
 // React page for staff to manage menu items and current orders
 export default function StaffDashboard(): JSX.Element {
@@ -39,15 +43,42 @@ export default function StaffDashboard(): JSX.Element {
 
   // poll current orders every 5 seconds
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const getAllOrdersResponse = await getApiOrders();
-        setOrders(getAllOrdersResponse.orders);
-      } catch (error: unknown) {
-        handleApiError(error, "Failed to refresh orders.");
+    // connect to ws
+    wsService.connect();
+
+    // subscribe to table 0 to recive all updates
+    const unsubscribeTable = wsService.subscribe("0", (payload) => {
+      // check if payload exists
+      if (!payload) {
+        return;
       }
-    }, 5000);
-    return () => clearInterval(interval);
+
+      // console log the payload
+      console.log("WebSocket event received:", payload);
+
+    // switch case for updating
+    switch (payload.type) {
+      case 'order':
+        void refreshOrders();
+        break;
+      
+      // case error 
+      case 'error':
+        console.error("Server WebSocket Error:", payload.message);
+        break;
+
+      default:
+        // log error or unknown type
+        console.warn("Unhandled message type received via WebSocket:", payload.type);
+        break;
+    }
+
+    });
+    // Clean up subscription and disconnect on unmount or table change
+    return () => {
+      unsubscribeTable();
+      wsService.disconnect();
+    };
   }, []);
 
   /**
@@ -144,6 +175,15 @@ export default function StaffDashboard(): JSX.Element {
       // reset the updating order status state variable after the request is complete
       setUpdatingOrderStatus(false);
     }
+  }
+
+  async function refreshOrders(): Promise<void> {
+    try {
+      const getAllOrdersResponse = await getApiOrders();
+      setOrders(getAllOrdersResponse.orders);
+    } catch (error: unknown) {
+      handleApiError(error, "Failed to refresh orders.");
+    } 
   }
 
   /**
