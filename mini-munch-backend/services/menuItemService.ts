@@ -97,7 +97,13 @@ export async function createMenuItem(
   });
 
   // send update to WS
-  sendDataToAllTablesWS({ message: 'Menu Updated' });
+  sendDataToAllTablesWS(
+    { 
+      type: "info",
+      topic: "menu",
+      payload: { message: 'Menu Updated' }
+    }
+  );
 
   // return a success result with the created menu item document
   return { success: true, data: menuItem };

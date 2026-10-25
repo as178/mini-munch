@@ -47,12 +47,25 @@ export async function startWSServer(WSS_PORT: number) {
     ws.on('message', async (rawData) => {
       try {
         //covert socket data into JSON
-        const { type, payload } = JSON.parse(String(rawData));
+        const { type, topic } = JSON.parse(String(rawData));
 
         switch (type) {
           // handle subscription event
           case 'subscribe':
-            const subTable = payload.table;
+            const subTable = topic;
+
+          // check if topic is a number
+          if (!Number.isInteger(subTable)) {
+            console.log(`Invalid table number: ${subTable}`);
+            
+            // send error through socket
+            ws.send(JSON.stringify({ 
+              topic: 'error', 
+              payload: { message: `Invalid table number: ${subTable}` } 
+            }));
+            return;
+          }
+
             const tableServiceResult = await getTable(Number(subTable));
 
             // table 0 is for staff, should recive all websocket data
@@ -62,7 +75,7 @@ export async function startWSServer(WSS_PORT: number) {
               
               // send ack back to client with table data 
               ws.send(JSON.stringify({ 
-                type: 'subscribed', 
+                topic: 'subscribed', 
                 payload: { 
                   topic: subTable, 
                   message: `Subscribed to table ${subTable}, will recive all events`
@@ -77,7 +90,7 @@ export async function startWSServer(WSS_PORT: number) {
               
               //send error though socket
               ws.send(JSON.stringify({ 
-              type: 'error', 
+              topic: 'error', 
               payload: { message: tableServiceResult.serviceError }}));
               return;
             }
@@ -89,8 +102,8 @@ export async function startWSServer(WSS_PORT: number) {
               
               // pass error though socket
               ws.send(JSON.stringify({ 
-              type: 'error', 
-              payload: { message: `Table ${subTable} already has a ws ` }}));
+              topic: 'error', 
+              payload: { message: `Table ${subTable} already has a ws` }}));
               return;
             }          
 
@@ -102,19 +115,19 @@ export async function startWSServer(WSS_PORT: number) {
               
               // send ack back to client with table data 
               ws.send(JSON.stringify({ 
-              type: 'subscribed', 
+              topic: 'subscribed', 
               payload: { 
                 topic: subTable, 
                 table: tableServiceResult.data
               }}));
             } else {
-              // table is not occupied, user should occupy table first
-              console.log(`Table ${subTable} is not occupied, can't bind ws`);
+              // table is unoccupied, user should occupy table first
+              console.log(`Table ${subTable} is unoccupied, can't bind ws`);
               
               // send message though socket
               ws.send(JSON.stringify({ 
-                type: 'error', 
-                payload: { message: `Table ${subTable} is not occupied, can't bind ws` }
+                topic: 'error', 
+                payload: { message: `Table ${subTable} is unoccupied, can't bind ws` }
               }));
             }
             break; 
@@ -123,7 +136,7 @@ export async function startWSServer(WSS_PORT: number) {
           case 'unsubscribe':
 
             // get topic to unsub from
-            const unsubTable = payload.table;
+            const unsubTable = topic;
 
             // check for topic and delete it form the subscription 
             if(subscriptions.has(unsubTable)) {
@@ -134,14 +147,14 @@ export async function startWSServer(WSS_PORT: number) {
 
               // send the change to the client
               ws.send(JSON.stringify({ 
-              type: 'unsubscribed', 
+              topic: 'unsubscribed', 
               payload: { message: `Client has unsubscribed from table ${unsubTable}` }}));
             }
             break;
 
           // fall back for unknow events
           default:
-            console.warn(`Unknown event type: ${type}`);
+            console.warn(`Unknown event topic: ${topic}`);
         }
       } catch (err) {
         console.error('Failed to parse WSS message: ', err);

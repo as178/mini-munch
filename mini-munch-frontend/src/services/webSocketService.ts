@@ -43,10 +43,8 @@ class WebSocketService {
       try {
         const data: WebSocketMessage = JSON.parse(event.data);
 
-        // trigger only for subscribed topics
-        if (data.topic && this.subscribedTopic === data.topic) {
+        // trigger when message arrives
           this.triggerListeners(data.topic, data.payload);
-        }
       } catch (error) {
         // message for parsing fail error 
         console.error('Failed to parse WebSocket message:', error);

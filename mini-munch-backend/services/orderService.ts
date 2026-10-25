@@ -297,7 +297,14 @@ export async function updateOrderStatus(
   // send update to ws for that table
   const table = existingOrder.table; 
   if (table){
-    sendDataToSelectTableWS(String(table) , { message: 'Status updated', id: orderId })
+    sendDataToSelectTableWS(
+      String(table), 
+      { 
+        type: "info",
+        topic: String(table),
+        payload: { message: 'Status updated', id: orderId }
+      }
+    )
   }
 
   // update the order status, save, populate the table reference, and return a successful result with the updated order
