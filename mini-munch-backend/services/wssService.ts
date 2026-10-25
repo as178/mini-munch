@@ -5,13 +5,13 @@ import { getTable } from "./tableService";
 const subscriptions = new Map();
 
 // function to send data to specific tables and table 0
-export function sendDataToSelectTablesWS(tables: string[], data: any) {
+export function sendDataToSelectTableWS(table: string, data: any) {
   const jsonData = JSON.stringify(data);
 
   // iterate through the subscriptions map
   for (const [topic, wsConnection] of subscriptions.entries()) {
     // check if the topic is in the list of tables or if it's table 0
-    if (tables.includes(topic) || topic === '0') {
+    if (table || topic === '0') {
       // Send the data to the websocket
       wsConnection.send(jsonData);
     }
