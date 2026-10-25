@@ -1,174 +1,180 @@
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 import { getTable } from "./tableService";
 
-// map to keep track of topics, in our case tabls
-const subscriptions = new Map();
+// Map to keep track of topics (table numbers) mapped to a Set of sockets
+const subscriptions = new Map<number, Set<WebSocket>>();
 
-// function to send data to specific tables and table 0
-export function sendDataToSelectTableWS(table: string, data: any) {
-  const jsonData = JSON.stringify(data);
+// Helper to safely add a connection to a table set
+function addSubscription(table: number, ws: WebSocket) {
+  if (!subscriptions.has(table)) {
+    subscriptions.set(table, new Set());
+  }
+  subscriptions.get(table)!.add(ws);
+}
 
-  // iterate through the subscriptions map
-  for (const [topic, wsConnection] of subscriptions.entries()) {
-    // check if the topic is in the list of tables or if it's table 0
-    if (table || topic === '0') {
-      // Send the data to the websocket
-      wsConnection.send(jsonData);
+// Helper to safely remove a connection from a table set
+function removeSubscription(table: number, ws: WebSocket) {
+  const tableSet = subscriptions.get(table);
+  if (tableSet) {
+    tableSet.delete(ws);
+    if (tableSet.size === 0) {
+      subscriptions.delete(table);
     }
   }
 }
 
-// function to send data to all tables, for menu updates
-export function sendDataToAllTablesWS(data: any) {
-  const jsonData = JSON.stringify(data);
+// Function to send data to specific tables and table 0
+export function sendDataToSelectTableWS(table: string | number, data: any) {
+  const targetTable = Number(table);
+  const staffTable = 0;
 
-  // iterate through the subscriptions map
-  for (const [topic, wsConnection] of subscriptions.entries()) {
-    // Send the data to the websocket
-    wsConnection.send(jsonData);
+  const tablesToNotify = [targetTable, staffTable];
+
+  for (const tableNum of tablesToNotify) {
+    const clients = subscriptions.get(tableNum);
+    if (clients) {
+      const message = JSON.stringify({
+        topic: String(tableNum),
+        payload: data
+      });
+      for (const wsConnection of clients) {
+        if (wsConnection.readyState === WebSocket.OPEN) {
+          wsConnection.send(message);
+        }
+      }
+    }
+  }
+}
+
+// Function to send data to all tables, for menu updates
+export function sendDataToAllTablesWS(data: any) {
+  for (const [tableNum, clients] of subscriptions.entries()) {
+    const message = JSON.stringify({
+      topic: String(tableNum),
+      payload: {
+        type: 'menu',
+        ...data
+      }
+    });
+    for (const wsConnection of clients) {
+      if (wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(message);
+      }
+    }
   }
 }
 
 export async function startWSServer(WSS_PORT: number) {
-  // start the WebSocket server
+  // Start the WebSocket server
   const wss = new WebSocketServer({ port: Number(WSS_PORT) }); 
   wss.on('listening', () => {
     console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
   });
 
-  // wss connection event handler 
-  wss.on('connection', (ws) => {
+  // WSS connection event handler 
+  wss.on('connection', (ws: WebSocket) => {
     console.log('New WS client connected');
 
-    // send welcome message to client
-    ws.send('Welcome to the Mini-Munch WSS server!');
-
-    // message event handler
+    // Message event handler
     ws.on('message', async (rawData) => {
       try {
-        //covert socket data into JSON
+        // Convert socket data into JSON
         const { type, topic } = JSON.parse(String(rawData));
+        const numericTable = Number(topic);
+
+        if (isNaN(numericTable)) {
+          console.log(`Invalid table number incoming: ${topic}`);
+          ws.send(JSON.stringify({ 
+            topic: 'error', 
+            payload: { message: `Invalid table number: ${topic}` } 
+          }));
+          return;
+        }
 
         switch (type) {
-          // handle subscription event
+          // Handle subscription event
           case 'subscribe':
-            const subTable = Number(topic);
-
-          // check if topic is a number
-          if (!Number.isInteger(subTable)) {
-            console.log(`Invalid table number: ${subTable}`);
-            
-            // send error through socket
-            ws.send(JSON.stringify({ 
-              topic: 'error', 
-              payload: { message: `Invalid table number: ${subTable}` } 
-            }));
-            return;
-          }
-
-            const tableServiceResult = await getTable(Number(subTable));
-
-            // table 0 is for staff, should recive all websocket data
-            if (subTable === 0) {
-              subscriptions.set(subTable, ws);
+            // Table 0 is for staff, should receive all websocket data
+            if (numericTable === 0) {
+              addSubscription(numericTable, ws);
               console.log(`Client subscribed to staff table (table 0)`);
               
-              // send ack back to client with table data 
+              // Send ack back to client
               ws.send(JSON.stringify({ 
                 topic: 'subscribed', 
                 payload: { 
-                  topic: subTable, 
-                  message: `Subscribed to table ${subTable}, will recive all events`
+                  topic: numericTable, 
+                  message: `Subscribed to table ${numericTable}, will receive all events`
                 }
               }));
               return;
             }
 
-            //check if there was an error getting the table
+            const tableServiceResult = await getTable(numericTable);
+
+            // Check if there was an error getting the table
             if (!tableServiceResult.success) {
               console.log(tableServiceResult.serviceError);
-              
-              //send error though socket
-              ws.send(JSON.stringify({ 
-              topic: 'error', 
-              payload: { message: tableServiceResult.serviceError }}));
-              return;
-            }
-
-            // check if there is an exsisting socket
-            if (subscriptions.has(subTable)) {
-              // log error for table already having socket bound
-              console.log(`Table ${subTable} already has a ws`);
-              
-              // pass error though socket
-              ws.send(JSON.stringify({ 
-              topic: 'error', 
-              payload: { message: `Table ${subTable} already has a ws` }}));
-              return;
-            }          
-
-            const table = tableServiceResult.data;
-            // if table occupied, then create web socket
-            if (!table.available){
-              subscriptions.set(subTable, ws);
-              console.log(`Client subscribed to: ${subTable}`);
-              
-              // send ack back to client with table data 
-              ws.send(JSON.stringify({ 
-              topic: 'subscribed', 
-              payload: { 
-                topic: subTable, 
-                table: tableServiceResult.data
-              }}));
-            } else {
-              // table is unoccupied, user should occupy table first
-              console.log(`Table ${subTable} is unoccupied, can't bind ws`);
-              
-              // send message though socket
               ws.send(JSON.stringify({ 
                 topic: 'error', 
-                payload: { message: `Table ${subTable} is unoccupied, can't bind ws` }
+                payload: { message: tableServiceResult.serviceError }
+              }));
+              return;
+            }       
+
+            const table = tableServiceResult.data;
+            // If table occupied, then register the web socket to the Set
+            if (!table.available){
+              addSubscription(numericTable, ws);
+              console.log(`Client subscribed to table: ${numericTable}`);
+              
+              // Send ack back to client with table data 
+              ws.send(JSON.stringify({ 
+                topic: 'subscribed', 
+                payload: { 
+                  topic: numericTable, 
+                  table: tableServiceResult.data
+                }
+              }));
+            } else {
+              // Table is unoccupied, user should occupy table first
+              console.log(`Table ${numericTable} is unoccupied, can't bind ws`);
+              ws.send(JSON.stringify({ 
+                topic: 'error', 
+                payload: { message: `Table ${numericTable} is unoccupied, can't bind ws` }
               }));
             }
             break; 
         
-          // handle un-subscription event
+          // Handle un-subscription event
           case 'unsubscribe':
+            removeSubscription(numericTable, ws);
+            console.log(`Client unsubscribed from table: ${numericTable}`);
 
-            // get topic to unsub from
-            const unsubTable = topic;
-
-            // check for topic and delete it form the subscription 
-            if(subscriptions.has(unsubTable)) {
-              subscriptions.delete(unsubTable);
-
-              // log the change
-              console.log(`Client unsubscribed from: ${unsubTable}`);
-
-              // send the change to the client
-              ws.send(JSON.stringify({ 
+            // Send the change verification to the client
+            ws.send(JSON.stringify({ 
               topic: 'unsubscribed', 
-              payload: { message: `Client has unsubscribed from table ${unsubTable}` }}));
-            }
+              payload: { message: `Client has unsubscribed from table ${numericTable}` }
+            }));
             break;
 
-          // fall back for unknow events
+          // Fallback for unknown events
           default:
-            console.warn(`Unknown event topic: ${topic}`);
+            console.warn(`Unknown event type: ${type}`);
         }
       } catch (err) {
         console.error('Failed to parse WSS message: ', err);
       }
     });
 
-    // close event handler
+    // Close event handler
     ws.on('close', () => {
-      for (const [topic, wsConnection] of subscriptions.entries()) {
-        if (wsConnection === ws) {
-          subscriptions.delete(topic);
-          console.log(`Client disconnected and unsubscribed from: ${topic}`);
+      for (const [tableNum, clients] of subscriptions.entries()) {
+        if (clients.has(ws)) {
+          removeSubscription(tableNum, ws);
+          console.log(`Client disconnected and scrubbed from table subscription: ${tableNum}`);
         }
       }
     });
-  })
+  });
 }

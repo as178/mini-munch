@@ -300,9 +300,9 @@ export async function updateOrderStatus(
     sendDataToSelectTableWS(
       String(table), 
       { 
-        type: "info",
-        topic: String(table),
-        payload: { message: 'Status updated', id: orderId }
+        type: "order", 
+        message: "Status updated", 
+        id: orderId 
       }
     )
   }

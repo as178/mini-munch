@@ -99,9 +99,8 @@ export async function createMenuItem(
   // send update to WS
   sendDataToAllTablesWS(
     { 
-      type: "info",
-      topic: "menu",
-      payload: { message: 'Menu Updated' }
+      type: "menu",
+      message: 'Menu Updated',
     }
   );
 
@@ -131,9 +130,8 @@ export async function deleteMenuItem(
   // send update to WS
   sendDataToAllTablesWS(
     { 
-      type: "info",
-      topic: "menu",
-      payload: { message: 'Menu Updated' }
+      type: "menu",
+      message: 'Menu Updated',
     }
   );
 
