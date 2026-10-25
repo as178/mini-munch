@@ -129,7 +129,13 @@ export async function deleteMenuItem(
   await menuItemToBeDeleted.data.deleteOne();
 
   // send update to WS
-  sendDataToAllTablesWS({ message: 'Menu Updated' });
+  sendDataToAllTablesWS(
+    { 
+      type: "info",
+      topic: "menu",
+      payload: { message: 'Menu Updated' }
+    }
+  );
 
   // return a success result with no content
   return { success: true, data: undefined };

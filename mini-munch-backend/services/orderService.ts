@@ -295,7 +295,7 @@ export async function updateOrderStatus(
   }
 
   // send update to ws for that table
-  const table = existingOrder.table; 
+  const table = (existingOrder?.table as any)?.tableNumber;
   if (table){
     sendDataToSelectTableWS(
       String(table), 
