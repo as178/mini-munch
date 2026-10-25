@@ -15,7 +15,6 @@ class WebSocketService {
   private reconnectInterval = 3000; 
   private messageQueue: string[] = [];
   private listeners: Map<string, Set<MessageCallback>> = new Map();
-  private subscribedTopic: string | null = null;
 
   constructor(url: string) {
     this.url = url;
@@ -70,15 +69,6 @@ class WebSocketService {
    * @param callback function to execute when messages arriving for table
    */
   public subscribe(topic: string, callback: MessageCallback): () => void {
-    // check if already subscribed to a different topic
-    if (this.subscribedTopic && this.subscribedTopic !== topic) {
-      // log error and return
-      console.error(`Already subscribed to a different topic: ${this.subscribedTopic}`);
-      return () => {};
-    }
-
-
-
     // Register the callback locally
     if (!this.listeners.has(topic)) {
       this.listeners.set(topic, new Set());
@@ -92,9 +82,6 @@ class WebSocketService {
       type: 'subscribe',
       topic: topic,
     };
-
-    // set the subscribed topic
-    this.subscribedTopic = topic;
 
     // send subscription request to WSS
     this.send(subscribeMessage);
@@ -139,7 +126,6 @@ class WebSocketService {
     if (this.socket) {
       this.socket.close(1000, 'Disconnected and closed Websocket');
       this.socket = null;
-      this.subscribedTopic = null;
     }
   }
 
@@ -181,8 +167,12 @@ class WebSocketService {
   }
 }
 
-// creates a websocket to the backend 
-const wsService = new WebSocketService('ws://localhost:5002');
+let instance: WebSocketService | null = null;
 
-// exports the created socket
-export default wsService;
+export const createWebSocketServiceInstance = (url: string): WebSocketService => {
+  if (!instance) {
+    instance = new WebSocketService(url);
+  }
+  
+  return instance;
+};

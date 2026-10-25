@@ -18,6 +18,10 @@ import {
   postApiOrdersIdItems,
 } from "../services/generated";
 import handleApiError from "../utils/errorUtil";
+import { createWebSocketServiceInstance } from "../services/webSocketService";
+
+// cerate websocket
+const wsService = createWebSocketServiceInstance('ws://localhost:5002');
 
 // React page where customers can view the menu, create and manage their order, and submit it
 export default function CustomerDashboard(): JSX.Element {
@@ -40,28 +44,56 @@ export default function CustomerDashboard(): JSX.Element {
     void loadCustomerDashboard();
   }, [tableNumber]);
 
-  // poll the current order every 5 seconds so the customer sees status changes
+  // connect to ws and subscribe to topics
   useEffect(() => {
-    // if there is no order or the order is in DRAFT status, do not poll
-    if (!order || order.status === "DRAFT") return;
-    const interval = setInterval(() => {
-      void refreshOrder();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [tableNumber, order]);
+    // check if table is a number
+    if (isNaN(parsedTableNumber)) {
+      return;
+    }
 
-  // poll the menu items every 7 seconds so the customer sees any changes to the menu
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const getMenuResponse = await getApiMenu();
-        setMenuItems(getMenuResponse.menuItems);
-      } catch (error: unknown) {
-        handleApiError(error, "Failed to refresh menu.");
-      }
-    }, 7000);
-    return () => clearInterval(interval);
-  }, []);
+    // connect to ws
+    wsService.connect();
+
+    // subscribe to table number
+    const unsubscribeTable = wsService.subscribe(parsedTableNumber.toString(), (payload) => {
+    // check if payload exists
+    if (!payload) {
+      return;
+    }
+
+    // console log the payload
+    console.log("WebSocket event received:", payload);
+
+    // switch case for updating
+    switch (payload.type) {
+      // refresh menu when items are changed
+      case 'menu':
+        void refreshMenu();
+        break;
+
+      // refresh order for status 
+      case 'order':
+        void refreshOrder();
+        break;
+
+      // case error 
+      case 'error':
+        console.error("Server WebSocket Error:", payload.message);
+        break;
+
+      default:
+        // log error or unknown type
+        console.warn("Unhandled message type received via WebSocket:", payload.type);
+        break;
+    }
+  });
+
+  // Clean up subscription and disconnect on unmount or table change
+  return () => {
+    unsubscribeTable();
+    wsService.disconnect();
+  };
+}, [parsedTableNumber]);
 
   /**
    * helper function to load the menu items
@@ -128,6 +160,18 @@ export default function CustomerDashboard(): JSX.Element {
         navigate("/table-input", { replace: true });
       }
       handleApiError(error, "Failed to refresh order. Please try again.");
+    }
+  }
+
+  /**
+   * helper function to refresh menu items if there is a change
+   */  
+  async function refreshMenu(): Promise<void> {
+    try {
+      const getMenuResponse = await getApiMenu();
+      setMenuItems(getMenuResponse.menuItems);
+    } catch (error: unknown) {
+      handleApiError(error, "Failed to refresh menu. Please try again.");
     }
   }
 
