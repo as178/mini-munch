@@ -1,7 +1,7 @@
 import { menuItemServiceErrors } from "../errors/menuItemErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
 import type { ServiceResult } from "./serviceResult";
-import { sendDataToAllTablesWS } from "../server";
+import { sendDataToAllTablesWS } from "../services/wssService";
 
 // defined type for the reasons a menu item service function can fail
 export type MenuItemServiceFailureReason =
