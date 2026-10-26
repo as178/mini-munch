@@ -41,7 +41,7 @@ export default function StaffDashboard(): JSX.Element {
     void loadStaffDashboard();
   }, []);
 
-  // poll current orders every 5 seconds
+  // connect to ws and subscribe to table 0, for all updates
   useEffect(() => {
     // connect to ws
     wsService.connect();

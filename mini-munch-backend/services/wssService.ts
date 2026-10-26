@@ -28,15 +28,20 @@ export function sendDataToSelectTableWS(table: string | number, data: any) {
   const targetTable = Number(table);
   const staffTable = 0;
 
+  // tables to send updat to, staff at table 0 should get everyting 
   const tablesToNotify = [targetTable, staffTable];
 
   for (const tableNum of tablesToNotify) {
     const clients = subscriptions.get(tableNum);
     if (clients) {
+
+      // create message
       const message = JSON.stringify({
         topic: String(tableNum),
         payload: data
       });
+
+      // send data to the target websockets
       for (const wsConnection of clients) {
         if (wsConnection.readyState === WebSocket.OPEN) {
           wsConnection.send(message);
@@ -49,6 +54,8 @@ export function sendDataToSelectTableWS(table: string | number, data: any) {
 // Function to send data to all tables, for menu updates
 export function sendDataToAllTablesWS(data: any) {
   for (const [tableNum, clients] of subscriptions.entries()) {
+
+    // message for menu update
     const message = JSON.stringify({
       topic: String(tableNum),
       payload: {
@@ -56,6 +63,8 @@ export function sendDataToAllTablesWS(data: any) {
         ...data
       }
     });
+
+    // send message to all websockets
     for (const wsConnection of clients) {
       if (wsConnection.readyState === WebSocket.OPEN) {
         wsConnection.send(message);
@@ -68,6 +77,7 @@ export async function startWSServer(WSS_PORT: number) {
   // Start the WebSocket server
   const wss = new WebSocketServer({ port: Number(WSS_PORT) }); 
   wss.on('listening', () => {
+    // log websocket has started
     console.log(`WebSocket server is running on ws://localhost:${WSS_PORT}`);
   });
 
@@ -82,8 +92,12 @@ export async function startWSServer(WSS_PORT: number) {
         const { type, topic } = JSON.parse(String(rawData));
         const numericTable = Number(topic);
 
+        // send error if table is not a number
         if (isNaN(numericTable)) {
+          // console log error
           console.log(`Invalid table number incoming: ${topic}`);
+
+          // send error through socket
           ws.send(JSON.stringify({ 
             topic: 'error', 
             payload: { message: `Invalid table number: ${topic}` } 
@@ -110,11 +124,15 @@ export async function startWSServer(WSS_PORT: number) {
               return;
             }
 
+            // get table info for requeseted table
             const tableServiceResult = await getTable(numericTable);
 
             // Check if there was an error getting the table
             if (!tableServiceResult.success) {
+              // log error
               console.log(tableServiceResult.serviceError);
+
+              // send error thought ws 
               ws.send(JSON.stringify({ 
                 topic: 'error', 
                 payload: { message: tableServiceResult.serviceError }
@@ -122,7 +140,9 @@ export async function startWSServer(WSS_PORT: number) {
               return;
             }       
 
+            // get table data
             const table = tableServiceResult.data;
+
             // If table occupied, then register the web socket to the Set
             if (!table.available){
               addSubscription(numericTable, ws);
@@ -137,8 +157,10 @@ export async function startWSServer(WSS_PORT: number) {
                 }
               }));
             } else {
-              // Table is unoccupied, user should occupy table first
+              // error table is unoccupied, user should occupy table before subscribing
               console.log(`Table ${numericTable} is unoccupied, can't bind ws`);
+
+              // send error through ws
               ws.send(JSON.stringify({ 
                 topic: 'error', 
                 payload: { message: `Table ${numericTable} is unoccupied, can't bind ws` }
@@ -158,9 +180,15 @@ export async function startWSServer(WSS_PORT: number) {
             }));
             break;
 
-          // Fallback for unknown events
           default:
+            // handle unknown events
             console.warn(`Unknown event type: ${type}`);
+
+            // send error through ws
+            ws.send(JSON.stringify({ 
+              topic: 'error', 
+              payload: { message: `Unknown event type: ${type}` }
+            }));
         }
       } catch (err) {
         console.error('Failed to parse WSS message: ', err);

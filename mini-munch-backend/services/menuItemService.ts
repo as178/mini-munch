@@ -96,7 +96,7 @@ export async function createMenuItem(
     price,
   });
 
-  // send update to WS
+  // send update to WS to notify client to update
   sendDataToAllTablesWS(
     { 
       type: "menu",
@@ -127,7 +127,7 @@ export async function deleteMenuItem(
   // delete the menu item document from the database
   await menuItemToBeDeleted.data.deleteOne();
 
-  // send update to WS
+  // send update to WS to notify client of update
   sendDataToAllTablesWS(
     { 
       type: "menu",
