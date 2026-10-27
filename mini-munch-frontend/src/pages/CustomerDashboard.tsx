@@ -76,14 +76,16 @@ export default function CustomerDashboard(): JSX.Element {
         void refreshOrder();
         break;
 
-      // case error 
+      // case error and show toast
       case 'error':
         console.error("Server WebSocket Error:", payload.message);
+        toast.error(`Server WebSocket Error: ${payload.message}`, { duration: 6500 });
         break;
 
       default:
-        // log error or unknown type
+        // log error or unknown type and show toast
         console.warn("Unhandled message type received via WebSocket:", payload.type);
+        toast.error(`Unhandled message type received via WebSocket: ${payload.type}`, { duration: 6500 });
         break;
     }
   });

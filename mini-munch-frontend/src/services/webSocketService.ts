@@ -1,3 +1,5 @@
+import toast from "react-hot-toast";
+
 // interfaces for structured communication 
 export interface WebSocketMessage<T = any> {
   type: string; // type of action
@@ -46,7 +48,8 @@ class WebSocketService {
           this.triggerListeners(data.topic, data.payload);
       } catch (error) {
         // message for parsing fail error 
-        console.error('Failed to parse WebSocket message:', error);
+        console.error('Failed to parse WebSocket message: ', error);
+        toast.error(`Failed to parse WebSocket message: ${error}`, { duration: 6500 });
       }
     };
 
@@ -60,6 +63,7 @@ class WebSocketService {
     // error handler
     this.socket.onerror = (error: Event) => {
       console.error('WebSocket Error encountered:', error);
+      toast.error(`WebSocket Error encountered: ${error}`, { duration: 6500 });
     };
   }
 
@@ -155,6 +159,7 @@ class WebSocketService {
     } else {
       // log error if max reconnect attempts are met
       console.error('RECON ERROR: Max WebSocket reconnection attempts reached, giving up.');
+      toast.error(`RECON ERROR: Max WebSocket reconnection attempts reached, giving up.`, { duration: 6500 });
     }
   }
 

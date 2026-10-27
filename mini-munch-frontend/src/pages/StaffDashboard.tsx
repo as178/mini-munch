@@ -56,21 +56,23 @@ export default function StaffDashboard(): JSX.Element {
       // console log the payload
       console.log("WebSocket event received:", payload);
 
-    // switch case for updating
-    switch (payload.type) {
-      case 'order':
-        void refreshOrders();
-        break;
-      
-      // case error 
-      case 'error':
-        console.error("Server WebSocket Error:", payload.message);
-        break;
+      // switch case for updating
+      switch (payload.type) {
+        case 'order':
+          void refreshOrders();
+          break;
+        
+        // case error 
+        case 'error':
+          console.error("Server WebSocket Error:", payload.message);
+          toast.error(`Server WebSocket Error: ${payload.message}`, { duration: 6500 });
+          break;
 
-      default:
-        // log error or unknown type
-        console.warn("Unhandled message type received via WebSocket:", payload.type);
-        break;
+        default:
+          // log error or unknown type
+          console.warn("Unhandled message type received via WebSocket:", payload.type);
+          toast.error(`Unhandled message type received via WebSocket: ${payload.type}`, { duration: 6500 });
+          break;
     }
 
     });
