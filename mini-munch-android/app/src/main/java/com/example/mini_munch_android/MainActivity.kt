@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mini_munch_android.ui.table.TableEntryViewModel
 import com.example.mini_munch_android.ui.table.TableInputScreen
 
 // entry to the android app
@@ -12,7 +14,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TableInputScreen()
+            val tableInputViewModel: TableEntryViewModel = viewModel()
+            TableInputScreen(tableInputViewModel)
         }
     }
 }

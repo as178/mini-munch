@@ -12,7 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,12 +26,7 @@ import com.example.mini_munch_android.ui.theme.MunchGrayBlue
 
 // table input page, forwarding customer actions to the viewmodel for handling
 @Composable
-fun TableInputScreen(
-    tableNumber: String, // inputted table number
-    isTableOccupied: Boolean, // true if table is occupied
-    onTableNumberChange: (String) -> Unit, // function to update table number
-    onOccupyTable: () -> Unit, // function to occupy table
-) {
+fun TableInputScreen(viewModel: TableEntryViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,8 +52,8 @@ fun TableInputScreen(
 
         // only allows numeric input and becomes disabled after occupation
         OutlinedTextField(
-            value = tableNumber,
-            onValueChange = onTableNumberChange,
+            value = viewModel.tableNumber,
+            onValueChange = viewModel::onTableNumberChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Table Number") },
             placeholder = { Text("Enter table number") },
@@ -67,20 +61,17 @@ fun TableInputScreen(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
-            enabled = !isTableOccupied,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MunchBlue,
-                focusedLabelColor = MunchBlue
-            )
+            enabled = !viewModel.isTableOccupied
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // button
         // disabled until number is entered or after occupation
         Button(
-            onClick = onOccupyTable,
+            onClick = viewModel::occupyTable,
             modifier = Modifier.fillMaxWidth(),
-            enabled = tableNumber.isNotBlank() && !isTableOccupied,
+            enabled = viewModel.tableNumber.isNotBlank() &&
+                    !viewModel.isTableOccupied,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MunchBlue,
                 contentColor = Color.White,
@@ -89,13 +80,13 @@ fun TableInputScreen(
             )
         ) {
             Text(
-                text = if (isTableOccupied) {
+                text = if (viewModel.isTableOccupied) {
                     "Table Occupied"
                 } else {
                     "Occupy Table"
                 },
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Bold
             )
         }
     }
