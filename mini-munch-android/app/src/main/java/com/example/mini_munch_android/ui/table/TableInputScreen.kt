@@ -4,20 +4,35 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.mini_munch_android.ui.theme.MunchBlue
+import com.example.mini_munch_android.ui.theme.MunchDarkerGrayBlue
+import com.example.mini_munch_android.ui.theme.MunchGrayBlue
 
-// table input page
+// table input page, forwarding customer actions to the viewmodel for handling
 @Composable
-fun TableInputScreen() {
+fun TableInputScreen(
+    tableNumber: String, // inputted table number
+    isTableOccupied: Boolean, // true if table is occupied
+    onTableNumberChange: (String) -> Unit, // function to update table number
+    onOccupyTable: () -> Unit, // function to occupy table
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -40,5 +55,48 @@ fun TableInputScreen() {
             style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(32.dp))
+
+        // only allows numeric input and becomes disabled after occupation
+        OutlinedTextField(
+            value = tableNumber,
+            onValueChange = onTableNumberChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Table Number") },
+            placeholder = { Text("Enter table number") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            ),
+            enabled = !isTableOccupied,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MunchBlue,
+                focusedLabelColor = MunchBlue
+            )
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // button
+        // disabled until number is entered or after occupation
+        Button(
+            onClick = onOccupyTable,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = tableNumber.isNotBlank() && !isTableOccupied,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MunchBlue,
+                contentColor = Color.White,
+                disabledContainerColor = MunchGrayBlue,
+                disabledContentColor = MunchDarkerGrayBlue
+            )
+        ) {
+            Text(
+                text = if (isTableOccupied) {
+                    "Table Occupied"
+                } else {
+                    "Occupy Table"
+                },
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+        }
     }
 }
