@@ -22,7 +22,6 @@ import { createWebSocketServiceInstance } from "../services/webSocketService";
 
 // cerate websocket
 const WS_URL = import.meta.env.VITE_WS_URL;
-const wsService = createWebSocketServiceInstance(WS_URL);
 
 console.log(`ws url: ${WS_URL}`);
 
@@ -55,7 +54,9 @@ export default function CustomerDashboard(): JSX.Element {
     }
 
     // connect to ws
+    const wsService = createWebSocketServiceInstance(WS_URL);
     wsService.connect();
+    console.log("called connect function");
 
     // subscribe to table number
     const unsubscribeTable = wsService.subscribe(parsedTableNumber.toString(), (payload) => {
@@ -96,7 +97,6 @@ export default function CustomerDashboard(): JSX.Element {
   // Clean up subscription and disconnect on unmount or table change
   return () => {
     unsubscribeTable();
-    wsService.disconnect();
   };
 }, [parsedTableNumber]);
 

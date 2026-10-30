@@ -17,6 +17,7 @@ class WebSocketService {
   private reconnectInterval = 3000; 
   private messageQueue: string[] = [];
   private listeners: Map<string, Set<MessageCallback>> = new Map();
+  private wasConnected = false;
 
   constructor(url: string) {
     this.url = url;
@@ -36,6 +37,7 @@ class WebSocketService {
     this.socket.onopen = () => {
       console.log('Connected to Web Socket');
       this.reconnectAttempts = 0;
+      this.wasConnected = true;
       this.flushQueue();
     };
 
@@ -56,8 +58,12 @@ class WebSocketService {
     // on close event handler, and log provided event
     this.socket.onclose = (event: CloseEvent) => {
       console.warn(`WebSocket closed: ${event.reason || 'No reason provided'}. Code: ${event.code}`);
-      // try to reconnect
-      this.handleReconnect();
+      // Only attempt reconnection if there was a connection before or if it was not intentionally closed via code 1000
+      if (this.wasConnected && event.code !== 1000) {
+        this.handleReconnect();
+      } else {
+        this.socket = null; // Clean up memory reference
+      }
     };
 
     // error handler
@@ -86,6 +92,10 @@ class WebSocketService {
       type: 'subscribe',
       topic: topic,
     };
+
+    if (!this.socket) {
+      this.connect();
+    }
 
     // send subscription request to WSS
     this.send(subscribeMessage);
@@ -132,6 +142,7 @@ class WebSocketService {
   public disconnect(): void {
     if (this.socket) {
       this.socket.close(1000, 'Disconnected and closed Websocket');
+      this.wasConnected = false
       this.socket = null;
     }
   }
@@ -163,6 +174,7 @@ class WebSocketService {
       // log error if max reconnect attempts are met
       console.error('RECON ERROR: Max WebSocket reconnection attempts reached, giving up.');
       toast.error(`RECON ERROR: Max WebSocket reconnection attempts reached, giving up.`, { duration: 6500 });
+      this.socket = null;
     }
   }
 
