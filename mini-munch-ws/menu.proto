@@ -10,7 +10,7 @@ service MenuService {
 // The request message containing the data you want to broadcast
 message MenuUpdateRequest {
   string type = 1; 
-  string message = 2,
+  string message = 2;
 }
 
 // The response message sent back to the remote service
