@@ -21,7 +21,8 @@ import handleApiError from "../utils/errorUtil";
 import { createWebSocketServiceInstance } from "../services/webSocketService";
 
 // cerate websocket
-const wsService = createWebSocketServiceInstance('ws://localhost:5002');
+const WS_URL = import.meta.env.WS_URI; 
+const wsService = createWebSocketServiceInstance(WS_URL);
 
 // React page where customers can view the menu, create and manage their order, and submit it
 export default function CustomerDashboard(): JSX.Element {
