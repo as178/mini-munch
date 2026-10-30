@@ -49,6 +49,12 @@ android {
         compose = true
         buildConfig = true
     }
+
+    sourceSets {
+        getByName("main") {
+            java.directories.add("src/main/java/com/example/mini_munch_android/generated_services/src/main/kotlin")
+        }
+    }
 }
 
 dependencies {
@@ -63,6 +69,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.gson)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
