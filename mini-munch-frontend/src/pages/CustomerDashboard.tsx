@@ -20,7 +20,7 @@ import {
 import handleApiError from "../utils/errorUtil";
 import { createWebSocketServiceInstance } from "../services/webSocketService";
 
-// cerate websocket
+// import websocket URL
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 console.log(`ws url: ${WS_URL}`);
@@ -40,6 +40,7 @@ export default function CustomerDashboard(): JSX.Element {
 
   // load menu items and the customer's current order when the page is first loaded
   const hasLoaded = useRef(false);
+
   useEffect(() => {
     if (hasLoaded.current) return;
     hasLoaded.current = true;
@@ -56,7 +57,6 @@ export default function CustomerDashboard(): JSX.Element {
     // connect to ws
     const wsService = createWebSocketServiceInstance(WS_URL);
     wsService.connect();
-    console.log("called connect function");
 
     // subscribe to table number
     const unsubscribeTable = wsService.subscribe(parsedTableNumber.toString(), (payload) => {

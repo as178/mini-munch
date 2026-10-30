@@ -17,9 +17,8 @@ import {
 import handleApiError from "../utils/errorUtil";
 import { createWebSocketServiceInstance } from "../services/webSocketService";
 
-// cerate websocket
+// import websocket URL
 const WS_URL = import.meta.env.VITE_WS_URL;
-const wsService = createWebSocketServiceInstance(WS_URL);
 
 // React page for staff to manage menu items and current orders
 export default function StaffDashboard(): JSX.Element {
@@ -45,6 +44,7 @@ export default function StaffDashboard(): JSX.Element {
   // connect to ws and subscribe to table 0, for all updates
   useEffect(() => {
     // connect to ws
+    const wsService = createWebSocketServiceInstance(WS_URL);
     wsService.connect();
 
     // subscribe to table 0 to recive all updates
@@ -80,7 +80,6 @@ export default function StaffDashboard(): JSX.Element {
     // Clean up subscription and disconnect on unmount or table change
     return () => {
       unsubscribeTable();
-      wsService.disconnect();
     };
   }, []);
 
