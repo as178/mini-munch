@@ -10,23 +10,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.mini_munch_android.ui.theme.MunchBlue
 import com.example.mini_munch_android.ui.theme.MunchDarkerGrayBlue
 import com.example.mini_munch_android.ui.theme.MunchGrayBlue
 
 // table input page, forwarding customer actions to the viewmodel for handling
 @Composable
-fun TableInputScreen(viewModel: TableEntryViewModel) {
+fun TableInputScreen(viewModel: TableInputViewModel) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +57,7 @@ fun TableInputScreen(viewModel: TableEntryViewModel) {
 
         // only allows numeric input and becomes disabled after occupation
         OutlinedTextField(
-            value = viewModel.tableNumber,
+            value = uiState.tableNumber,
             onValueChange = viewModel::onTableNumberChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Table Number") },
@@ -61,17 +66,25 @@ fun TableInputScreen(viewModel: TableEntryViewModel) {
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
-            enabled = !viewModel.isTableOccupied
+            enabled = !uiState.isTableOccupied && !uiState.isLoading
         )
+
+        // display api errors so customer can retry
+        uiState.errorMessage?.let { errorMessage ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
         Spacer(modifier = Modifier.height(24.dp))
 
-        // button
-        // disabled until number is entered or after occupation
+        // button, prevents duplicate requests while the api call is running
         Button(
             onClick = viewModel::occupyTable,
             modifier = Modifier.fillMaxWidth(),
-            enabled = viewModel.tableNumber.isNotBlank() &&
-                    !viewModel.isTableOccupied,
+            enabled = uiState.tableNumber.isNotBlank() && !uiState.isTableOccupied && !uiState.isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MunchBlue,
                 contentColor = Color.White,
@@ -79,15 +92,21 @@ fun TableInputScreen(viewModel: TableEntryViewModel) {
                 disabledContentColor = MunchDarkerGrayBlue
             )
         ) {
-            Text(
-                text = if (viewModel.isTableOccupied) {
-                    "Table Occupied"
-                } else {
-                    "Occupy Table"
-                },
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.height(20.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = if (uiState.isTableOccupied) {
+                        "Table Occupied"
+                    } else {
+                        "Occupy Table"
+                    }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
