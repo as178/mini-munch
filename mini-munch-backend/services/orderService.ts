@@ -345,7 +345,7 @@ export async function deleteOrder(
   orderId: string,
 ): Promise<ServiceResult<void, OrderFailureReason>> {
   // if the order does not exist, return a failure result with the appropriate reason
-  const existingOrder = await OrderModel.findById(orderId);
+  const existingOrder = await OrderModel.findById(orderId).populate<{ table: TableDocument }>("table");
   if (!existingOrder) {
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
@@ -358,18 +358,22 @@ export async function deleteOrder(
     };
   }
 
+  const tableNumber = existingOrder.table?.tableNumber;
+
   // delete the order and return a successful result with no content
   await existingOrder.deleteOne();
     
-  // send update to ws for that table
-  sendDataToSelectTableWS(
-    String(0), 
-    { 
-      type: "order", 
-      message: "Status updated", 
-      id: orderId 
-    }
-  )
+  // send update to ws for that table and staff
+  if (tableNumber !== undefined) {
+    sendDataToSelectTableWS(
+      String(tableNumber),
+      {
+        type: "order",
+        message: "Status updated",
+        id: orderId
+      }
+    );
+  }
 
   return { success: true, data: undefined };
 }
