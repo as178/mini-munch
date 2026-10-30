@@ -93,12 +93,14 @@ class CustomerViewModel(
             }
         }
 
-        // refresh the order every 5 seconds once it has been submitted
+        // refresh (valid) order every 5 seconds once it has been submitted
         orderPollingJob = viewModelScope.launch {
             while (isActive) {
                 delay(5000.milliseconds)
 
-                if (_uiState.value.order?.status != "DRAFT") {
+                val currentOrder = _uiState.value.order
+
+                if (currentOrder != null && currentOrder.status != "DRAFT") {
                     try {
                         val order = repository.getOrder(tableNumber)
 
