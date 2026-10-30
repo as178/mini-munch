@@ -33,7 +33,9 @@ class TableInputViewModel(
         if (!_uiState.value.isLoading && newTableNumber.all { char -> char.isDigit() }) {
             _uiState.update { currentState ->
                 currentState.copy(
-                    tableNumber = newTableNumber, isTableOccupied = false, errorMessage = null
+                    tableNumber = newTableNumber,
+                    isTableOccupied = false,
+                    errorMessage = null
                 )
             }
         }
@@ -55,7 +57,7 @@ class TableInputViewModel(
             return
         }
 
-        // launch coroutine to perform network request
+        // launch coroutine to update ui state and perform network request
         viewModelScope.launch {
             // set loading state to true and clear previous errors
             _uiState.update { state ->

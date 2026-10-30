@@ -42,8 +42,11 @@ import java.util.Locale
 // customer dashboard page, forwarding customer actions to the viewmodel
 @Composable
 fun CustomerDashboardScreen(
-    tableNumber: Int, viewModel: CustomerViewModel, onLeaveTable: () -> Unit
+    tableNumber: Int,
+    viewModel: CustomerViewModel,
+    onLeaveTable: () -> Unit
 ) {
+    // collect ui state from viewmodel
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // load dashboard information when the screen is opened
@@ -51,7 +54,7 @@ fun CustomerDashboardScreen(
         viewModel.loadDashboard(tableNumber)
     }
 
-    // start and stop polling with the dashboard lifecycle
+    // start/stop polling when the screen is active/not active
     DisposableEffect(tableNumber) {
         viewModel.startPolling(tableNumber)
         onDispose {
@@ -66,6 +69,7 @@ fun CustomerDashboardScreen(
         }
     }
 
+    // displaying the dashboard; loading is indicated, otherwise the dashboard is shown
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,16 +80,15 @@ fun CustomerDashboardScreen(
             Spacer(modifier = Modifier.weight(1f))
             CircularProgressIndicator(color = MunchBlue)
             Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = "Loading . . .",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MunchGrayBlue
             )
-
             Spacer(modifier = Modifier.weight(1f))
         } else {
+            // lazy column to adapt to differing list sizes and dynamically render content
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -127,7 +130,7 @@ fun CustomerDashboardScreen(
                     }
                 }
 
-                // display api errors so the customer can retry
+                // display api errors so the customer stays informed
                 uiState.errorMessage?.let { errorMessage ->
                     item {
                         Text(
@@ -177,6 +180,7 @@ fun CustomerDashboardScreen(
                     )
                 }
 
+                // handle if there are no current order items or the order does not exist
                 val order = uiState.order
                 if (order == null || order.items.isEmpty()) {
                     item {
@@ -187,8 +191,12 @@ fun CustomerDashboardScreen(
                         )
                     }
                 } else {
+                    // display formatted list of order items
                     items(
-                        items = order.items, key = { item -> "order_${item.menuItemId}" }) { item ->
+                        items = order.items,
+                        key = { item -> "order_${item.menuItemId}" }
+                    ){ item ->
+                        // card to handle order item manipulation and safe handling
                         OrderItemCard(
                             item = item,
                             enabled = order.status == "DRAFT" && !uiState.isActionLoading,
@@ -220,7 +228,6 @@ fun CustomerDashboardScreen(
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
-
                             Text(
                                 text = formatPrice(order.total),
                                 style = MaterialTheme.typography.titleLarge,
@@ -245,15 +252,19 @@ fun CustomerDashboardScreen(
     }
 }
 
-// displays an individual menu item and its add button
+// menu item card component; displays an individual menu item and its add button
 @Composable
 private fun MenuItemCard(
-    item: CustomerMenuItem, enabled: Boolean, onAdd: () -> Unit
+    item: CustomerMenuItem,
+    enabled: Boolean,
+    onAdd: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
             containerColor = Color.White
-        ), elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
             modifier = Modifier
@@ -268,13 +279,11 @@ private fun MenuItemCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MunchDarkerGrayBlue
                 )
-
                 Text(
                     text = formatPrice(item.price),
                     style = MaterialTheme.typography.bodyLarge,
@@ -285,7 +294,9 @@ private fun MenuItemCard(
             Spacer(modifier = Modifier.width(12.dp))
 
             Button(
-                onClick = onAdd, enabled = enabled, colors = ButtonDefaults.buttonColors(
+                onClick = onAdd,
+                enabled = enabled,
+                colors = ButtonDefaults.buttonColors(
                     containerColor = MunchTurquoise,
                     contentColor = Color.White,
                     disabledContainerColor = MunchGrayBlue,
@@ -298,7 +309,7 @@ private fun MenuItemCard(
     }
 }
 
-// displays an individual order item and its quantity controls
+// order item card component; displays an individual order item and its quantity controls
 @Composable
 private fun OrderItemCard(
     item: CustomerOrderItem,
@@ -326,7 +337,6 @@ private fun OrderItemCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-
                     Text(
                         text = "${formatPrice(item.price)} each",
                         style = MaterialTheme.typography.bodyMedium
@@ -434,7 +444,9 @@ private fun OrderStatusCard(
                     disabledContainerColor = MunchGrayBlue,
                     disabledContentColor = MunchDarkerGrayBlue
                 )
-            ) {
+            )
+            // dynamic text shown depending on loading state and order status
+            {
                 Text(
                     text = if (isActionLoading) {
                         "Please wait"
@@ -444,7 +456,6 @@ private fun OrderStatusCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-
             if (order.status == "READY") {
                 Text(
                     text = "Your order is ready for pickup, please leave the table when finished.",
@@ -457,6 +468,6 @@ private fun OrderStatusCard(
     }
 }
 
-// formats prices consistently to two decimal places
+// function to format prices consistently to two decimal places
 private fun formatPrice(price: java.math.BigDecimal): String =
     "$" + String.format(Locale.US, "%.2f", price)

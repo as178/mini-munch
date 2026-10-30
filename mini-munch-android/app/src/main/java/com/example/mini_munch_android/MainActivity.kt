@@ -66,11 +66,18 @@ fun MiniMunchApp() {
                 }
             )
         ) { backStackEntry ->
-            val tableNumber =
-                backStackEntry.arguments?.getInt("tableNumber") ?: return@composable
+            // retrieve table number from route
+            val tableNumber = backStackEntry.arguments?.getInt("tableNumber")
+            if (tableNumber == null) {
+                // stop composition of the screen as a safeguard and pop back to the previous screen if argument is missing
+                LaunchedEffect(Unit) {
+                    navController.popBackStack()
+                }
+                return@composable
+            }
 
+            // else, load the customer dashboard screen
             val customerViewModel: CustomerViewModel = viewModel()
-
             CustomerDashboardScreen(
                 tableNumber = tableNumber,
                 viewModel = customerViewModel,

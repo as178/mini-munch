@@ -31,9 +31,13 @@ class CustomerViewModel(
     private val repository: CustomerRepository = CustomerRepository()
 ) : ViewModel() {
 
+    // mutable state flow holding current ui state
     private val _uiState = MutableStateFlow(CustomerUiState())
+
+    // read-only state flow exposed to the ui
     val uiState = _uiState.asStateFlow()
 
+    // polling jobs to refresh menu and order information
     private var menuPollingJob: Job? = null
     private var orderPollingJob: Job? = null
 
@@ -41,20 +45,26 @@ class CustomerViewModel(
     fun loadDashboard(tableNumber: Int) {
         if (_uiState.value.isLoading) return
 
+        // launch coroutine to update ui and perform network request
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(
-                    tableNumber = tableNumber, isLoading = true, errorMessage = null
+                    tableNumber = tableNumber,
+                    isLoading = true,
+                    errorMessage = null
                 )
             }
 
+            // retrieve menu items and current order
             try {
                 val menuItems = repository.getMenu()
                 val order = repository.getOrCreateOrder(tableNumber)
 
                 _uiState.update { state ->
                     state.copy(
-                        menuItems = menuItems, order = order, isLoading = false, errorMessage = null
+                        menuItems = menuItems,
+                        order = order, isLoading = false,
+                        errorMessage = null
                     )
                 }
             } catch (exception: CancellationException) {
@@ -165,7 +175,7 @@ class CustomerViewModel(
         }
     }
 
-    // submits the current order to the kitchen
+    // submits the current order to staff
     fun submitOrder() {
         updateOrder { order ->
             repository.submitOrder(order.id)

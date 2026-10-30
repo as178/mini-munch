@@ -67,10 +67,12 @@ class CustomerRepository {
 
     // adds a menu item to the current order
     suspend fun addItem(
-        orderId: String, menuItemId: String
+        orderId: String,
+        menuItemId: String
     ): CustomerOrder = apiCall {
         ordersApi.apiOrdersIdItemsPost(
-            id = orderId, apiOrdersIdItemsPostRequest = ApiOrdersIdItemsPostRequest(
+            id = orderId,
+            apiOrdersIdItemsPostRequest = ApiOrdersIdItemsPostRequest(
                 menuItemId = menuItemId
             )
         ).order.toCustomerOrder()
@@ -78,7 +80,9 @@ class CustomerRepository {
 
     // updates the quantity of an item in the current order
     suspend fun updateItemQuantity(
-        orderId: String, menuItemId: String, quantity: Int
+        orderId: String,
+        menuItemId: String,
+        quantity: Int
     ): CustomerOrder = apiCall {
         ordersApi.apiOrdersIdItemsMenuItemIdPatch(
             id = orderId,
@@ -91,10 +95,13 @@ class CustomerRepository {
 
     // removes a menu item from the current order
     suspend fun removeItem(
-        orderId: String, menuItemId: String, tableNumber: Int
+        orderId: String,
+        menuItemId: String,
+        tableNumber: Int
     ): CustomerOrder = apiCall {
         ordersApi.apiOrdersIdItemsMenuItemIdDelete(
-            id = orderId, menuItemId = menuItemId
+            id = orderId,
+            menuItemId = menuItemId
         )
 
         ordersApi.apiOrdersTableTableNumberGet(tableNumber).order.toCustomerOrder()
@@ -103,7 +110,8 @@ class CustomerRepository {
     // submits the current order to the kitchen
     suspend fun submitOrder(orderId: String): CustomerOrder = apiCall {
         ordersApi.apiOrdersIdStatusPatch(
-            id = orderId, apiOrdersIdStatusPatchRequest = ApiOrdersIdStatusPatchRequest(
+            id = orderId,
+            apiOrdersIdStatusPatchRequest = ApiOrdersIdStatusPatchRequest(
                 status = ApiOrdersIdStatusPatchRequest.Status.SUBMITTED
             )
         ).order.toCustomerOrder()
@@ -111,7 +119,8 @@ class CustomerRepository {
 
     // deletes the current order and releases the table
     suspend fun leaveTable(
-        orderId: String, tableNumber: Int
+        orderId: String,
+        tableNumber: Int
     ) {
         apiCall {
             ordersApi.apiOrdersIdDelete(orderId)
@@ -134,6 +143,7 @@ class CustomerRepository {
             val table = getTable(tableNumber)
             if (table.available) return true
 
+            // double-check; calling this may trigger an error if order does not exist, thus returning true for table availability
             if (orderId != null) {
                 getOrder(tableNumber)
             }
@@ -150,12 +160,16 @@ class CustomerRepository {
 
 // converts a generated api order into the app's own order model
 private fun Order.toCustomerOrder(): CustomerOrder = CustomerOrder(
-    id = id, tableNumber = table.tableNumber, items = items.map { item ->
+    id = id,
+    tableNumber = table.tableNumber,
+    items = items.map { item ->
         CustomerOrderItem(
             menuItemId = item.menuItem,
             name = item.name,
             price = item.price,
             quantity = item.quantity
         )
-    }, total = total, status = status.value
+    },
+    total = total,
+    status = status.value
 )
