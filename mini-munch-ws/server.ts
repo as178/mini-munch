@@ -1,7 +1,7 @@
 import grpc from '@grpc/grpc-js';
 import protoLoader from '@grpc/proto-loader';
 import path from 'path';
-import { startWSServer } from './wssService.js';
+import { sendDataToAllTablesWS, startWSServer } from './wssService.js';
 import dotenv from "dotenv";
 
 // load environment variable from .env file
@@ -9,7 +9,7 @@ dotenv.config();
 const { WSS_PORT, GRPC_PORT } = process.env;
 
 // load the proto file using modern ES modules dirname syntax
-const PROTO_PATH = path.resolve(import.meta.dirname, './menu.proto');
+const PROTO_PATH = path.resolve(import.meta.dirname, '../proto/menu.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -27,7 +27,7 @@ function sendMenuUpdateHandler(call: any, callback: any) {
     //  data back into an json object
     const data = requestData.json_payload ? JSON.parse(requestData.json_payload) : requestData;
 
-    //sendDataToAllTablesWS(data); 
+    sendDataToAllTablesWS(data); 
 
     // ack successful receipt and broadcast back to the remote gRPC client
     callback(null, { success: true, message: 'Menu update broadcasted to all tables.' });
@@ -54,7 +54,7 @@ if (GRPC_PORT) {
       console.error(`gRPC Server failed to bind: ${err.message}`);
       return;
     }
-    console.log(`gRPC Server running on port ${boundPort}`);
+    console.log(`gRPC Server running on localhost:${boundPort}`);
   });
 
   // Start the WebSocket server

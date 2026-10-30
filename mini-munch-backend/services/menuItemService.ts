@@ -1,7 +1,35 @@
 import { menuItemServiceErrors } from "../errors/menuItemErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
 import type { ServiceResult } from "./serviceResult";
-import { sendDataToAllTablesWS } from "../services/wssService";
+import path from "path";
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
+
+// gRPC Client to connect to remote WebSocket server
+const WS_SERVER_ADDRESS = process.env.WS_SERVER_GRPC_ADDRESS; 
+
+//path to menu proto file 
+const PROTO_PATH = path.resolve(import.meta.dirname, '../../proto/menu.proto');
+
+const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+  keepCase: true, longs: String, enums: String, defaults: true, oneofs: true 
+});
+
+const menuProto = grpc.loadPackageDefinition(packageDefinition).menu as any;
+const wsGrpcClient = new menuProto.MenuService(WS_SERVER_ADDRESS, grpc.credentials.createInsecure());
+
+// helper function to handle async gRPC broadcasts
+function broadcastToWebSockets(payload: object) {
+  wsGrpcClient.SendMenuUpdate({
+    json_payload: JSON.stringify(payload)
+  }, (error: any, response: any) => {
+    if (error) {
+      console.error('Failed to forward event to WS Server over gRPC:', error.message);
+      return;
+    }
+    console.log('Remote WS Server ack receipt:', response.message);
+  });
+}
 
 // defined type for the reasons a menu item service function can fail
 export type MenuItemServiceFailureReason =
@@ -97,7 +125,7 @@ export async function createMenuItem(
   });
 
   // send update to WS to notify client to update
-  sendDataToAllTablesWS(
+  broadcastToWebSockets(
     { 
       type: "menu",
       message: 'Menu Updated',
@@ -128,7 +156,7 @@ export async function deleteMenuItem(
   await menuItemToBeDeleted.data.deleteOne();
 
   // send update to WS to notify client of update
-  sendDataToAllTablesWS(
+  broadcastToWebSockets(
     { 
       type: "menu",
       message: 'Menu Updated',
