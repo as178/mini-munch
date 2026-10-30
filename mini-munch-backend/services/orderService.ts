@@ -360,5 +360,16 @@ export async function deleteOrder(
 
   // delete the order and return a successful result with no content
   await existingOrder.deleteOne();
+    
+  // send update to ws for that table
+  sendDataToSelectTableWS(
+    String(0), 
+    { 
+      type: "order", 
+      message: "Status updated", 
+      id: orderId 
+    }
+  )
+
   return { success: true, data: undefined };
 }
