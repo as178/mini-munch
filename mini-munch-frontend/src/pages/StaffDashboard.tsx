@@ -59,6 +59,12 @@ export default function StaffDashboard(): JSX.Element {
 
       // switch case for updating
       switch (payload.type) {
+      
+        // skip menu update since API return will update local data 
+        case 'menu':
+        break;
+
+        // refresh orders
         case 'order':
           void refreshOrders();
           break;
