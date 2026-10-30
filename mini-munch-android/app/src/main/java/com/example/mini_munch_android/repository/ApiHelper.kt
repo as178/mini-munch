@@ -1,5 +1,6 @@
 package com.example.mini_munch_android.repository
 
+import android.util.Log
 import com.example.mini_munch_android.generated_services.infrastructure.ClientError
 import com.example.mini_munch_android.generated_services.infrastructure.ClientException
 import com.example.mini_munch_android.generated_services.infrastructure.ServerError
@@ -18,6 +19,7 @@ internal suspend fun <T> apiCall(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
+        Log.e("ApiHelper", "API request failed", exception)
         throw Exception(
             getErrorMessage(exception) ?: exception.message ?: fallbackMessage, exception
         )
@@ -30,7 +32,8 @@ internal fun getErrorCode(exception: Exception): String? {
 
     return try {
         JSONObject(errorBody).optString("code").takeIf { code -> code.isNotBlank() }
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.w("ApiHelper", "Failed to parse backend error code JSON", e)
         null
     }
 }
@@ -41,7 +44,8 @@ private fun getErrorMessage(exception: Exception): String? {
 
     return try {
         JSONObject(errorBody).optString("message").takeIf { message -> message.isNotBlank() }
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.w("ApiHelper", "Failed to parse backend error message JSON", e)
         null
     }
 }

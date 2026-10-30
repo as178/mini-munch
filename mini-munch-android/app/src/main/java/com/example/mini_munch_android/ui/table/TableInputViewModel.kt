@@ -1,5 +1,6 @@
 package com.example.mini_munch_android.ui.table
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mini_munch_android.repository.TableRepository
@@ -83,6 +84,7 @@ class TableInputViewModel(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
+                Log.e("TableInputViewModel", "Failed to occupy table", exception)
                 // handle network or server errors
                 _uiState.update { state ->
                     state.copy(
