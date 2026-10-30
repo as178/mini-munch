@@ -15,6 +15,10 @@ import {
   postApiMenu,
 } from "../services/generated";
 import handleApiError from "../utils/errorUtil";
+import { createWebSocketServiceInstance } from "../services/webSocketService";
+
+// import websocket URL
+const WS_URL = import.meta.env.VITE_WS_URL;
 
 // React page for staff to manage menu items and current orders
 export default function StaffDashboard(): JSX.Element {
@@ -37,17 +41,52 @@ export default function StaffDashboard(): JSX.Element {
     void loadStaffDashboard();
   }, []);
 
-  // poll current orders every 5 seconds
+  // connect to ws and subscribe to table 0, for all updates
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const getAllOrdersResponse = await getApiOrders();
-        setOrders(getAllOrdersResponse.orders);
-      } catch (error: unknown) {
-        handleApiError(error, "Failed to refresh orders.");
+    // connect to ws
+    const wsService = createWebSocketServiceInstance(WS_URL);
+    wsService.connect();
+
+    // subscribe to table 0 to recive all updates
+    const unsubscribeTable = wsService.subscribe("0", (payload) => {
+      // check if payload exists
+      if (!payload) {
+        return;
       }
-    }, 5000);
-    return () => clearInterval(interval);
+
+      // console log the payload
+      console.log("WebSocket event received:", payload);
+
+      // switch case for updating
+      switch (payload.type) {
+      
+        // skip menu update since API return will update local data 
+        case 'menu':
+        break;
+
+        // refresh orders
+        case 'order':
+          void refreshOrders();
+          break;
+        
+        // case error 
+        case 'error':
+          console.error("Server WebSocket Error:", payload.message);
+          toast.error(`Server WebSocket Error: ${payload.message}`, { duration: 6500 });
+          break;
+
+        default:
+          // log error or unknown type
+          console.warn("Unhandled message type received via WebSocket:", payload.type);
+          toast.error(`Unhandled message type received via WebSocket: ${payload.type}`, { duration: 6500 });
+          break;
+    }
+
+    });
+    // Clean up subscription and disconnect on unmount or table change
+    return () => {
+      unsubscribeTable();
+    };
   }, []);
 
   /**
@@ -144,6 +183,15 @@ export default function StaffDashboard(): JSX.Element {
       // reset the updating order status state variable after the request is complete
       setUpdatingOrderStatus(false);
     }
+  }
+
+  async function refreshOrders(): Promise<void> {
+    try {
+      const getAllOrdersResponse = await getApiOrders();
+      setOrders(getAllOrdersResponse.orders);
+    } catch (error: unknown) {
+      handleApiError(error, "Failed to refresh orders.");
+    } 
   }
 
   /**
