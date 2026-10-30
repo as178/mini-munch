@@ -110,7 +110,10 @@ class WebSocketService {
     };
   }
 
-  // send messages safely or queues them if waiting for connection
+  /**
+   * function to send messages safely or queues them if waiting for connection
+   * @param WebSocketMessage 
+   */ 
   public send(message: WebSocketMessage): void {
     const stringifiedMessage = JSON.stringify(message);
 
@@ -163,7 +166,11 @@ class WebSocketService {
     }
   }
 
-  // Triggers all listeners for a given table with the provided payload
+  /**
+   * Fucntion to rigger all listeners for a given table with the provided payload
+   * @param topic
+   * @param payload 
+   */ 
   private triggerListeners(topic: string, payload: any): void {
     const topicListeners = this.listeners.get(topic);
     if (topicListeners) {
@@ -174,6 +181,10 @@ class WebSocketService {
 
 let instance: WebSocketService | null = null;
 
+  /**
+   * Fucntion to create a websocket for a URL
+   * @param url
+   */ 
 export const createWebSocketServiceInstance = (url: string): WebSocketService => {
   if (!instance) {
     instance = new WebSocketService(url);
