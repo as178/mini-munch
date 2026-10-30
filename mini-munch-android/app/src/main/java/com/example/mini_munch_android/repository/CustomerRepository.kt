@@ -4,6 +4,7 @@ import com.example.mini_munch_android.BuildConfig
 import com.example.mini_munch_android.data.CustomerMenuItem
 import com.example.mini_munch_android.data.CustomerOrder
 import com.example.mini_munch_android.data.CustomerOrderItem
+import com.example.mini_munch_android.data.Table
 import com.example.mini_munch_android.generated_services.apis.MenuItemsApi
 import com.example.mini_munch_android.generated_services.apis.OrdersApi
 import com.example.mini_munch_android.generated_services.apis.TablesApi
@@ -115,6 +116,34 @@ class CustomerRepository {
         apiCall {
             ordersApi.apiOrdersIdDelete(orderId)
             tablesApi.apiTablesTableNumberReleasePatch(tableNumber)
+        }
+    }
+
+    // retrieves table information
+    suspend fun getTable(tableNumber: Int): Table = apiCall {
+        val response = tablesApi.apiTablesTableNumberGet(tableNumber)
+        Table(
+            tableNumber = response.table.tableNumber,
+            available = response.table.available
+        )
+    }
+
+    // checks if the table has been released or the order has been discarded by staff
+    suspend fun checkTableStatus(tableNumber: Int, orderId: String?): Boolean {
+        return try {
+            val table = getTable(tableNumber)
+            if (table.available) return true
+
+            if (orderId != null) {
+                getOrder(tableNumber)
+            }
+            false
+        } catch (exception: Exception) {
+            val errorCode = getErrorCode(exception)
+            if (errorCode == "ORDER_NOT_FOUND" || exception.message?.contains("404") == true) {
+                return true
+            }
+            false
         }
     }
 }

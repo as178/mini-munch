@@ -93,25 +93,32 @@ class CustomerViewModel(
             }
         }
 
-        // refresh (valid) order every 5 seconds once it has been submitted
+        // refresh table and order status every 5 seconds to detect if table was released or order discarded by staff
         orderPollingJob = viewModelScope.launch {
             while (isActive) {
                 delay(5000.milliseconds)
 
                 val currentOrder = _uiState.value.order
 
-                if (currentOrder != null && currentOrder.status != "DRAFT") {
-                    try {
-                        val order = repository.getOrder(tableNumber)
+                try {
+                    val isKickedOff = repository.checkTableStatus(tableNumber, currentOrder?.id)
+                    if (isKickedOff) {
+                        _uiState.update { state ->
+                            state.copy(hasLeftTable = true)
+                        }
+                        break
+                    }
 
+                    if (currentOrder != null && currentOrder.status != "DRAFT") {
+                        val order = repository.getOrder(tableNumber)
                         _uiState.update { state ->
                             state.copy(order = order)
                         }
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (_: Exception) {
-                        // keep the existing order if a refresh fails
                     }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (_: Exception) {
+                    // keep existing order if a refresh fails temporarily
                 }
             }
         }
@@ -137,8 +144,6 @@ class CustomerViewModel(
     fun updateItemQuantity(
         menuItemId: String, quantity: Int
     ) {
-        val order = _uiState.value.order ?: return
-
         if (quantity <= 0) {
             removeItem(menuItemId)
             return
@@ -236,13 +241,6 @@ class CustomerViewModel(
                     )
                 }
             }
-        }
-    }
-
-    // clears the current error message
-    fun clearError() {
-        _uiState.update { state ->
-            state.copy(errorMessage = null)
         }
     }
 }
