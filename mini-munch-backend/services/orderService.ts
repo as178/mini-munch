@@ -5,7 +5,7 @@ import {
   type OrderItem,
   type OrderStatus,
 } from "../models/Order";
-import { TableModel } from "../models/Table";
+import { type TableDocument } from "../models/Table";
 import {
   getMenuItemById,
   type MenuItemServiceFailureReason,
@@ -269,7 +269,8 @@ export async function updateOrderStatus(
   status: Exclude<OrderStatus, "DRAFT">,
 ): Promise<OrderServiceResult> {
   // if the order does not exist, return a failure result with the appropriate reason
-  const existingOrder = await OrderModel.findById(orderId).populate('table');
+  const existingOrder = await OrderModel.findById(orderId);//.populate<{ table: TableDocument }>("table");
+
   if (!existingOrder) {
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
@@ -294,17 +295,22 @@ export async function updateOrderStatus(
     };
   }
 
-  // send update to ws for that table
-  const table = (existingOrder?.table as any)?.tableNumber;
-  if (table){
-    sendDataToSelectTableWS(
-      String(table), 
-      { 
-        type: "order", 
-        message: "Status updated", 
-        id: orderId 
-      }
-    )
+  const orderTableInfo = await existingOrder.populate<{ table: TableDocument }>("table");
+
+  if (orderTableInfo.table) {
+    const table = orderTableInfo.table.tableNumber;
+    
+    // send update to ws for that table
+    if (table){
+      sendDataToSelectTableWS(
+        String(table), 
+        { 
+          type: "order", 
+          message: "Status updated", 
+          id: orderId 
+        }
+      )
+    }
   }
 
   // update the order status, save, populate the table reference, and return a successful result with the updated order
