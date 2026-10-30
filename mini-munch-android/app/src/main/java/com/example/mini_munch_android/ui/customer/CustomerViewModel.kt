@@ -1,34 +1,35 @@
 package com.example.mini_munch_android.ui.customer
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mini_munch_android.BuildConfig
 import com.example.mini_munch_android.data.CustomerMenuItem
 import com.example.mini_munch_android.data.CustomerOrder
 import com.example.mini_munch_android.repository.CustomerRepository
+import com.example.mini_munch_android.repository.TableWebSocketManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 // represents the ui state for customer screen
 data class CustomerUiState(
-    val tableNumber: Int? = null,
-    val menuItems: List<CustomerMenuItem> = emptyList(),
-    val order: CustomerOrder? = null,
-    val isLoading: Boolean = false,
-    val isActionLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val hasLeftTable: Boolean = false
+    val tableNumber: Int? = null,                       // current table number for this customer session
+    val menuItems: List<CustomerMenuItem> = emptyList(), // available menu items fetched from backend
+    val order: CustomerOrder? = null,                   // current customer order details and status
+    val isLoading: Boolean = false,                     // whether initial screen data loading is in progress
+    val isActionLoading: Boolean = false,               // whether a specific order button action is in progress
+    val errorMessage: String? = null,                   // error message to display to customer if any
+    val hasLeftTable: Boolean = false                   // whether customer has left table or table was released
 )
 
 // handles customer dashboard state and actions
 class CustomerViewModel(
-    private val repository: CustomerRepository = CustomerRepository()
+    private val repository: CustomerRepository = CustomerRepository(),
+    private val webSocketManager: TableWebSocketManager = TableWebSocketManager()
 ) : ViewModel() {
 
     // mutable state flow holding current ui state
@@ -37,9 +38,8 @@ class CustomerViewModel(
     // read-only state flow exposed to the ui
     val uiState = _uiState.asStateFlow()
 
-    // polling jobs to refresh menu and order information
-    private var menuPollingJob: Job? = null
-    private var orderPollingJob: Job? = null
+    // websocket job to receive real-time menu and order events
+    private var webSocketJob: Job? = null
 
     // loads the menu and creates or retrieves the table's current order
     fun loadDashboard(tableNumber: Int) {
@@ -70,6 +70,7 @@ class CustomerViewModel(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
+                Log.e("CustomerViewModel", "Failed to load customer dashboard for table $tableNumber", exception)
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
@@ -80,67 +81,63 @@ class CustomerViewModel(
         }
     }
 
-    // starts refreshing menu and order information while the dashboard is active
-    fun startPolling(tableNumber: Int) {
-        if (menuPollingJob?.isActive == true) return
+    // starts listening for real-time menu and order websocket updates while the dashboard is active
+    fun startWebSocketListener(tableNumber: Int) {
+        if (webSocketJob?.isActive == true) return
 
-        // refresh menu items every 7 seconds
-        menuPollingJob = viewModelScope.launch {
-            while (isActive) {
-                delay(7000.milliseconds)
-
-                try {
-                    val menuItems = repository.getMenu()
-
-                    _uiState.update { state ->
-                        state.copy(menuItems = menuItems)
-                    }
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (_: Exception) {
-                    // keep the existing menu if a refresh fails
-                }
-            }
-        }
-
-        // refresh table and order status every 5 seconds to detect if table was released or order discarded by staff
-        orderPollingJob = viewModelScope.launch {
-            while (isActive) {
-                delay(5000.milliseconds)
-
-                val currentOrder = _uiState.value.order
-
-                try {
-                    val isKickedOff = repository.checkTableStatus(tableNumber, currentOrder?.id)
-                    if (isKickedOff) {
-                        _uiState.update { state ->
-                            state.copy(hasLeftTable = true)
+        webSocketJob = viewModelScope.launch {
+            try {
+                webSocketManager.observeTableEvents(BuildConfig.API_WS_URL, tableNumber)
+                    .collect { payload ->
+                        // handle incoming websocket messages
+                        when (payload.type) {
+                            "menu" -> {
+                                // retrieve updated menu items and update ui
+                                try {
+                                    val menuItems = repository.getMenu()
+                                    _uiState.update { state ->
+                                        state.copy(menuItems = menuItems)
+                                    }
+                                } catch (e: Exception) {
+                                    Log.w("CustomerViewModel", "Failed to refresh menu items from websocket event", e)
+                                }
+                            }
+                            "order" -> {
+                                // retrieve updated order and update ui
+                                val currentOrder = _uiState.value.order
+                                try {
+                                    // check if staff has discarded the order and the customer is "kicked off"
+                                    val isKickedOff = repository.checkTableStatus(tableNumber, currentOrder?.id)
+                                    if (isKickedOff) {
+                                        _uiState.update { state ->
+                                            state.copy(hasLeftTable = true)
+                                        }
+                                    } else if (currentOrder != null) {
+                                        // else, retrieve updated order and update ui
+                                        val order = repository.getOrder(tableNumber)
+                                        _uiState.update { state ->
+                                            state.copy(order = order)
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.w("CustomerViewModel", "Failed to refresh order from websocket event", e)
+                                }
+                            }
                         }
-                        break
                     }
-
-                    if (currentOrder != null && currentOrder.status != "DRAFT") {
-                        val order = repository.getOrder(tableNumber)
-                        _uiState.update { state ->
-                            state.copy(order = order)
-                        }
-                    }
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (_: Exception) {
-                    // keep existing order if a refresh fails temporarily
-                }
+            } catch (exception: CancellationException) {
+                // handle cancellation of websocket listener
+                throw exception
+            } catch (exception: Exception) {
+                Log.w("CustomerViewModel", "Error in websocket collection stream for table $tableNumber", exception)
             }
         }
     }
 
-    // stops menu and order polling when the dashboard is no longer active
-    fun stopPolling() {
-        menuPollingJob?.cancel()
-        menuPollingJob = null
-
-        orderPollingJob?.cancel()
-        orderPollingJob = null
+    // stops websocket listener when the dashboard is no longer active
+    fun stopWebSocketListener() {
+        webSocketJob?.cancel()
+        webSocketJob = null
     }
 
     // adds a menu item to the current order
@@ -208,6 +205,7 @@ class CustomerViewModel(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
+                Log.e("CustomerViewModel", "Failed to leave table", exception)
                 _uiState.update { state ->
                     state.copy(
                         isActionLoading = false,
@@ -244,6 +242,7 @@ class CustomerViewModel(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
+                Log.e("CustomerViewModel", "Failed to update order", exception)
                 _uiState.update { state ->
                     state.copy(
                         isActionLoading = false,

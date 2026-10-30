@@ -54,11 +54,11 @@ fun CustomerDashboardScreen(
         viewModel.loadDashboard(tableNumber)
     }
 
-    // start/stop polling when the screen is active/not active
+    // start/stop real-time websocket listener when the screen is active/not active
     DisposableEffect(tableNumber) {
-        viewModel.startPolling(tableNumber)
+        viewModel.startWebSocketListener(tableNumber)
         onDispose {
-            viewModel.stopPolling()
+            viewModel.stopWebSocketListener()
         }
     }
 
