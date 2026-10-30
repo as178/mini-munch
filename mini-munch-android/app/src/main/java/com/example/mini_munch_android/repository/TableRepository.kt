@@ -13,14 +13,13 @@ class TableRepository {
     )
 
     // function to occupy a table and return updated table from backend
-    suspend fun occupyTable(tableNumber: Int): Table =
-        apiCall("Unable to occupy the table.") {
-            // if successful, return updated table
-            val response = tablesApi.apiTablesTableNumberOccupyPatch(tableNumber)
+    suspend fun occupyTable(tableNumber: Int): Table = apiCall("Unable to occupy the table.") {
+        // if successful, return updated table
+        val response = tablesApi.apiTablesTableNumberOccupyPatch(tableNumber)
 
-            Table(
-                tableNumber = response.table.tableNumber,
-                available = response.table.available
-            )
-        }
+        Table(
+            tableNumber = response.table.tableNumber,
+            available = response.table.available
+        )
+    }
 }
