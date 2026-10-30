@@ -43,4 +43,4 @@ app.listen(Number(PORT), "0.0.0.0", () => {
 });
 
 // Start the WebSocket server
-startWSServer(Number(WSS_PORT));
+//startWSServer(Number(WSS_PORT));

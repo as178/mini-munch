@@ -9,8 +9,7 @@ service MenuService {
 
 // The request message containing the data you want to broadcast
 message MenuUpdateRequest {
-  string type = 1; 
-  string message = 2;
+  string json_payload = 1;
 }
 
 // The response message sent back to the remote service

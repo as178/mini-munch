@@ -20,6 +20,7 @@ const wsGrpcClient = new menuProto.MenuService(WS_SERVER_ADDRESS, grpc.credentia
 
 // helper function to handle async gRPC broadcasts
 function broadcastToWebSockets(payload: object) {
+
   wsGrpcClient.SendMenuUpdate({
     json_payload: JSON.stringify(payload)
   }, (error: any, response: any) => {
@@ -166,3 +167,4 @@ export async function deleteMenuItem(
   // return a success result with no content
   return { success: true, data: undefined };
 }
+
