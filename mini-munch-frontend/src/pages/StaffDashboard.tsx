@@ -18,7 +18,8 @@ import handleApiError from "../utils/errorUtil";
 import { createWebSocketServiceInstance } from "../services/webSocketService";
 
 // cerate websocket
-const wsService = createWebSocketServiceInstance('ws://localhost:5002');
+const WS_URL = import.meta.env.VITE_WS_URL;
+const wsService = createWebSocketServiceInstance(WS_URL);
 
 // React page for staff to manage menu items and current orders
 export default function StaffDashboard(): JSX.Element {
