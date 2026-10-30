@@ -21,13 +21,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.mini_munch_android.data.CustomerMenuItem
 import com.example.mini_munch_android.data.CustomerOrder
@@ -35,6 +35,7 @@ import com.example.mini_munch_android.data.CustomerOrderItem
 import com.example.mini_munch_android.ui.theme.MunchBlue
 import com.example.mini_munch_android.ui.theme.MunchDarkerGrayBlue
 import com.example.mini_munch_android.ui.theme.MunchGrayBlue
+import com.example.mini_munch_android.ui.theme.MunchRed
 import com.example.mini_munch_android.ui.theme.MunchTurquoise
 import java.util.Locale
 
@@ -53,7 +54,6 @@ fun CustomerDashboardScreen(
     // start and stop polling with the dashboard lifecycle
     DisposableEffect(tableNumber) {
         viewModel.startPolling(tableNumber)
-
         onDispose {
             viewModel.stopPolling()
         }
@@ -74,9 +74,7 @@ fun CustomerDashboardScreen(
     ) {
         if (uiState.isLoading) {
             Spacer(modifier = Modifier.weight(1f))
-
             CircularProgressIndicator(color = MunchBlue)
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
@@ -89,7 +87,8 @@ fun CustomerDashboardScreen(
             Spacer(modifier = Modifier.weight(1f))
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(20.dp)
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // page header; app title, table number and leave table button
                 item {
@@ -123,13 +122,7 @@ fun CustomerDashboardScreen(
                                 disabledContentColor = MunchDarkerGrayBlue
                             )
                         ) {
-                            Text(
-                                text = if (uiState.isActionLoading) {
-                                    "Please wait"
-                                } else {
-                                    "Leave Table"
-                                }
-                            )
+                            Text(text = "Leave Table", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -169,7 +162,8 @@ fun CustomerDashboardScreen(
                         MenuItemCard(
                             item = item,
                             enabled = uiState.order?.status == "DRAFT" && !uiState.isActionLoading,
-                            onAdd = { viewModel.addItem(item) })
+                            onAdd = { viewModel.addItem(item) }
+                        )
                     }
                 }
 
@@ -184,7 +178,6 @@ fun CustomerDashboardScreen(
                 }
 
                 val order = uiState.order
-
                 if (order == null || order.items.isEmpty()) {
                     item {
                         Text(
@@ -195,7 +188,7 @@ fun CustomerDashboardScreen(
                     }
                 } else {
                     items(
-                        items = order.items, key = { item -> item.menuItemId }) { item ->
+                        items = order.items, key = { item -> "order_${item.menuItemId}" }) { item ->
                         OrderItemCard(
                             item = item,
                             enabled = order.status == "DRAFT" && !uiState.isActionLoading,
@@ -299,7 +292,7 @@ private fun MenuItemCard(
                     disabledContentColor = MunchDarkerGrayBlue
                 )
             ) {
-                Text("Add")
+                Text(text = "Add", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -315,9 +308,11 @@ private fun OrderItemCard(
     onIncrease: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
             containerColor = Color.White
-        ), elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -338,10 +333,17 @@ private fun OrderItemCard(
                     )
                 }
 
-                OutlinedButton(
-                    onClick = onRemove, enabled = enabled
+                Button(
+                    onClick = onRemove,
+                    enabled = enabled,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MunchRed,
+                        contentColor = Color.White,
+                        disabledContainerColor = MunchGrayBlue,
+                        disabledContentColor = MunchDarkerGrayBlue
+                    )
                 ) {
-                    Text("Remove")
+                    Text(text = "Remove", fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -356,13 +358,13 @@ private fun OrderItemCard(
                     onClick = onDecrease,
                     enabled = enabled && item.quantity > 1,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MunchGrayBlue,
-                        contentColor = MunchDarkerGrayBlue,
+                        containerColor = MunchBlue,
+                        contentColor = Color.White,
                         disabledContainerColor = MunchGrayBlue,
                         disabledContentColor = MunchDarkerGrayBlue
                     )
                 ) {
-                    Text("-")
+                    Text(text = "-", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Text(
@@ -376,13 +378,13 @@ private fun OrderItemCard(
                     onClick = onIncrease,
                     enabled = enabled && item.quantity < 10,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MunchGrayBlue,
-                        contentColor = MunchDarkerGrayBlue,
+                        containerColor = MunchBlue,
+                        contentColor = Color.White,
                         disabledContainerColor = MunchGrayBlue,
                         disabledContentColor = MunchDarkerGrayBlue
                     )
                 ) {
-                    Text("+")
+                    Text(text = "+", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -392,12 +394,16 @@ private fun OrderItemCard(
 // displays the current order status and submit button
 @Composable
 private fun OrderStatusCard(
-    order: CustomerOrder, isActionLoading: Boolean, onSubmit: () -> Unit
+    order: CustomerOrder,
+    isActionLoading: Boolean,
+    onSubmit: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
             containerColor = Color.White
-        ), elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
             modifier = Modifier
@@ -434,7 +440,8 @@ private fun OrderStatusCard(
                         "Please wait"
                     } else {
                         "Submit Order"
-                    }
+                    },
+                    fontWeight = FontWeight.Bold
                 )
             }
 
