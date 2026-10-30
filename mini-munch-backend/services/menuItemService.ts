@@ -8,26 +8,30 @@ import protoLoader from '@grpc/proto-loader';
 // gRPC Client to connect to remote WebSocket server
 const WS_SERVER_ADDRESS = process.env.WS_SERVER_GRPC_ADDRESS; 
 
-//path to menu proto file 
+//path to shared menu proto file 
 const PROTO_PATH = path.resolve(import.meta.dirname, '../../proto/menu.proto');
 
+// load proto definition
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true, longs: String, enums: String, defaults: true, oneofs: true 
 });
 
+// laod and create and register fuctions with wss 
 const menuProto = grpc.loadPackageDefinition(packageDefinition).menu as any;
 const wsGrpcClient = new menuProto.MenuService(WS_SERVER_ADDRESS, grpc.credentials.createInsecure());
 
-// helper function to handle async gRPC broadcasts
+// function to handle async gRPC calls to send update to ws
 function broadcastToWebSockets(payload: object) {
 
   wsGrpcClient.SendMenuUpdate({
     json_payload: JSON.stringify(payload)
   }, (error: any, response: any) => {
+    // handle error
     if (error) {
       console.error('Failed to forward event to WS Server over gRPC:', error.message);
       return;
     }
+    // log success
     console.log('Remote WS Server ack receipt:', response.message);
   });
 }
@@ -125,7 +129,7 @@ export async function createMenuItem(
     price,
   });
 
-  // send update to WS to notify client to update
+  // send update to WS to notify client to update by gRPC call
   broadcastToWebSockets(
     { 
       type: "menu",
@@ -156,7 +160,7 @@ export async function deleteMenuItem(
   // delete the menu item document from the database
   await menuItemToBeDeleted.data.deleteOne();
 
-  // send update to WS to notify client of update
+  // send update to WS to notify client of update by gRPC call
   broadcastToWebSockets(
     { 
       type: "menu",

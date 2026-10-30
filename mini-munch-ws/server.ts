@@ -4,17 +4,22 @@ import { sendDataToAllTablesWS, startWSServer } from './wssService.js';
 import dotenv from "dotenv";
 import grpc from '@grpc/grpc-js';
 
-// refactored Function gRPC Handler
+// load environment variable from .env file
+dotenv.config();
+const { WSS_PORT, GRPC_URL } = process.env;
+
+// fucntion to send menu updates to all websockets
 function sendMenuUpdateHandler(call: any, callback: any) {
   try {
     const requestData = call.request;
 
     //  data back into an json object
-    const data = requestData.json_payload ? JSON.parse(requestData.json_payload) : requestData;
+    const message = requestData.json_payload ? JSON.parse(requestData.json_payload) : requestData;
 
-    sendDataToAllTablesWS(data);
+    // send message to all websockets
+    sendDataToAllTablesWS(message);
 
-    // ack successful receipt and broadcast back to the remote gRPC client
+    // return ack for successful receipt and broadcast back to the remote gRPC client
     callback(null, { success: true, message: 'Menu update broadcasted to all tables.' });
 
   } catch (error: any) {
@@ -25,11 +30,7 @@ function sendMenuUpdateHandler(call: any, callback: any) {
   }
 }
 
-// load environment variable from .env file
-dotenv.config();
-const { WSS_PORT, GRPC_PORT } = process.env;
-
-// load the proto file using modern ES modules dirname syntax
+// load the shared menu proto file 
 const PROTO_PATH = path.resolve(import.meta.dirname, '../proto/menu.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -38,6 +39,8 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   defaults: true,
   oneofs: true,
 });
+
+// load fucntion definition
 const menuProto = grpc.loadPackageDefinition(packageDefinition).menu as any;
 
 // start gRPC server
@@ -48,8 +51,10 @@ server.addService(menuProto.MenuService.service, {
   SendMenuUpdate: sendMenuUpdateHandler
 });
 
-if (GRPC_PORT) {
-  server.bindAsync(GRPC_PORT, grpc.ServerCredentials.createInsecure(), (err, boundPort) => {
+// if 
+if (GRPC_URL && WSS_PORT) {
+  // bind gRCP server to port
+  server.bindAsync(GRPC_URL, grpc.ServerCredentials.createInsecure(), (err, boundPort) => {
     if (err) {
       console.error(`gRPC Server failed to bind: ${err.message}`);
       return;
@@ -59,4 +64,6 @@ if (GRPC_PORT) {
 
   // Start the WebSocket server
   startWSServer(Number(WSS_PORT));
+} else {
+  console.error('Ports and url were unable to load');
 }
