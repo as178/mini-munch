@@ -5,12 +5,14 @@ import {
   type OrderItem,
   type OrderStatus,
 } from "../models/Order";
+import { type TableDocument } from "../models/Table";
 import {
   getMenuItemById,
   type MenuItemServiceFailureReason,
 } from "./menuItemService";
 import type { ServiceResult } from "./serviceResult";
 import { getTable, type TableServiceFailureReason } from "./tableService";
+import { sendDataToSelectTableWS } from "./wssService";
 
 // defined type for the reasons specific to an order service function failure
 export type OrderServiceFailureReason =
@@ -267,7 +269,8 @@ export async function updateOrderStatus(
   status: Exclude<OrderStatus, "DRAFT">,
 ): Promise<OrderServiceResult> {
   // if the order does not exist, return a failure result with the appropriate reason
-  const existingOrder = await OrderModel.findById(orderId);
+  const existingOrder = await OrderModel.findById(orderId);//.populate<{ table: TableDocument }>("table");
+
   if (!existingOrder) {
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }
@@ -290,6 +293,24 @@ export async function updateOrderStatus(
       success: false,
       serviceError: orderServiceErrors.ORDER_HAS_NO_ITEMS,
     };
+  }
+
+  const orderTableInfo = await existingOrder.populate<{ table: TableDocument }>("table");
+
+  if (orderTableInfo.table) {
+    const table = orderTableInfo.table.tableNumber;
+    
+    // send update to ws for that table
+    if (table){
+      sendDataToSelectTableWS(
+        String(table), 
+        { 
+          type: "order", 
+          message: "Status updated", 
+          id: orderId 
+        }
+      )
+    }
   }
 
   // update the order status, save, populate the table reference, and return a successful result with the updated order
@@ -339,5 +360,16 @@ export async function deleteOrder(
 
   // delete the order and return a successful result with no content
   await existingOrder.deleteOne();
+    
+  // send update to ws for that table
+  sendDataToSelectTableWS(
+    String(0), 
+    { 
+      type: "order", 
+      message: "Status updated", 
+      id: orderId 
+    }
+  )
+
   return { success: true, data: undefined };
 }
