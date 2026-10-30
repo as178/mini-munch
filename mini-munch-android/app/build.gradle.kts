@@ -12,7 +12,8 @@ val localProperties = Properties().apply {
         file.inputStream().use { load(it) }
     }
 }
-val apiBaseUrl = localProperties.getProperty("API_BASE_URL") ?: "\"https://192.168.1.100:5001/\""
+val apiBaseUrl = localProperties.getProperty("API_BASE_URL") ?: "\"http://10.0.2.2:5001/\""
+val apiWsUrl = localProperties.getProperty("API_WS_URL") ?: "\"ws://10.0.2.2:5002/\""
 
 android {
     namespace = "com.example.mini_munch_android"
@@ -31,6 +32,7 @@ android {
 
         // injection of API Base URL into BuildConfig
         buildConfigField("String", "API_BASE_URL", apiBaseUrl)
+        buildConfigField("String", "API_WS_URL", apiWsUrl)
     }
 
     buildTypes {
