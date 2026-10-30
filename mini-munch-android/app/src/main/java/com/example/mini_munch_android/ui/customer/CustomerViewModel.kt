@@ -44,9 +44,7 @@ class CustomerViewModel(
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(
-                    tableNumber = tableNumber,
-                    isLoading = true,
-                    errorMessage = null
+                    tableNumber = tableNumber, isLoading = true, errorMessage = null
                 )
             }
 
@@ -56,10 +54,7 @@ class CustomerViewModel(
 
                 _uiState.update { state ->
                     state.copy(
-                        menuItems = menuItems,
-                        order = order,
-                        isLoading = false,
-                        errorMessage = null
+                        menuItems = menuItems, order = order, isLoading = false, errorMessage = null
                     )
                 }
             } catch (exception: CancellationException) {
@@ -68,8 +63,7 @@ class CustomerViewModel(
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
-                        errorMessage = exception.message
-                            ?: "Unable to load the customer dashboard."
+                        errorMessage = exception.message ?: "Unable to load the customer dashboard."
                     )
                 }
             }
@@ -83,7 +77,7 @@ class CustomerViewModel(
         // refresh menu items every 7 seconds
         menuPollingJob = viewModelScope.launch {
             while (isActive) {
-                delay(7000)
+                delay(7000.milliseconds)
 
                 try {
                     val menuItems = repository.getMenu()
@@ -139,8 +133,7 @@ class CustomerViewModel(
 
     // changes the quantity of an item in the current order
     fun updateItemQuantity(
-        menuItemId: String,
-        quantity: Int
+        menuItemId: String, quantity: Int
     ) {
         val order = _uiState.value.order ?: return
 
@@ -151,9 +144,7 @@ class CustomerViewModel(
 
         updateOrder { currentOrder ->
             repository.updateItemQuantity(
-                currentOrder.id,
-                menuItemId,
-                quantity
+                currentOrder.id, menuItemId, quantity
             )
         }
     }
@@ -162,9 +153,7 @@ class CustomerViewModel(
     fun removeItem(menuItemId: String) {
         updateOrder { order ->
             repository.removeItem(
-                orderId = order.id,
-                menuItemId = menuItemId,
-                tableNumber = order.tableNumber
+                orderId = order.id, menuItemId = menuItemId, tableNumber = order.tableNumber
             )
         }
     }
@@ -187,8 +176,7 @@ class CustomerViewModel(
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(
-                    isActionLoading = true,
-                    errorMessage = null
+                    isActionLoading = true, errorMessage = null
                 )
             }
 
@@ -197,8 +185,7 @@ class CustomerViewModel(
 
                 _uiState.update { state ->
                     state.copy(
-                        isActionLoading = false,
-                        hasLeftTable = true
+                        isActionLoading = false, hasLeftTable = true
                     )
                 }
             } catch (exception: CancellationException) {
@@ -207,8 +194,7 @@ class CustomerViewModel(
                 _uiState.update { state ->
                     state.copy(
                         isActionLoading = false,
-                        errorMessage = exception.message
-                            ?: "Unable to leave the table."
+                        errorMessage = exception.message ?: "Unable to leave the table."
                     )
                 }
             }
@@ -226,8 +212,7 @@ class CustomerViewModel(
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(
-                    isActionLoading = true,
-                    errorMessage = null
+                    isActionLoading = true, errorMessage = null
                 )
             }
 
@@ -236,8 +221,7 @@ class CustomerViewModel(
 
                 _uiState.update { state ->
                     state.copy(
-                        order = updatedOrder,
-                        isActionLoading = false
+                        order = updatedOrder, isActionLoading = false
                     )
                 }
             } catch (exception: CancellationException) {
@@ -246,8 +230,7 @@ class CustomerViewModel(
                 _uiState.update { state ->
                     state.copy(
                         isActionLoading = false,
-                        errorMessage = exception.message
-                            ?: "Unable to update your order."
+                        errorMessage = exception.message ?: "Unable to update your order."
                     )
                 }
             }
