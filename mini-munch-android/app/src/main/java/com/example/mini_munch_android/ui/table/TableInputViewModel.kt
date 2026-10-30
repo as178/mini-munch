@@ -92,4 +92,9 @@ class TableInputViewModel(
             }
         }
     }
+
+    // resets table input state when returning from the customer dashboard
+    fun reset() {
+        _uiState.value = TableInputUiState()
+    }
 }
