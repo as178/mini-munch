@@ -1,14 +1,15 @@
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
 import path = require('path');
-import grpc = require('@grpc/grpc-js');
-import protoLoader = require('@grpc/proto-loader');
+import { sendDataToAllTablesWS, startWSServer } from './wssService.js';
+import dotenv from "dotenv";
 
-import type { ProtoGrpcType } from './generated/todo';
-import type { TodoServiceHandlers } from './generated/todopackage/TodoService';
-import type { TodoRequest } from './generated/todopackage/TodoRequest';
-import type { TodoResponse } from './generated/todopackage/TodoResponse';
+// load environment variable from .env file
+dotenv.config();
+const { WSS_PORT, GRPC_PORT } = process.env;
 
-const PROTO_PATH = path.join(__dirname, 'todo.proto');
-
+// load the proto file
+const PROTO_PATH = path.resolve(__dirname, './menu.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -16,38 +17,47 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   defaults: true,
   oneofs: true,
 });
+const menuProto = grpc.loadPackageDefinition(packageDefinition).menu as any;
 
-const todoProto = (grpc.loadPackageDefinition(packageDefinition) as unknown) as ProtoGrpcType;
+// refactored Function gRPC Handler
+function sendMenuUpdateHandler(call: any, callback: any) {
+  try {
+    const requestData = call.request;
+    
+    //  data back into an json object
+    const data = requestData.json_payload ? JSON.parse(requestData.json_payload) : requestData;
 
-const todoServiceImplementation: TodoServiceHandlers = {
-  GetTodo: (
-    call: grpc.ServerUnaryCall<TodoRequest, TodoResponse>,
-    callback: grpc.sendUnaryData<TodoResponse>
-  ) => {
-    console.log(`Received request for Todo ID: ${call.request.id}`);
+    sendDataToAllTablesWS(data); 
 
-    const mockTodo: TodoResponse = {
-      id: call.request.id,
-      title: "Strict NodeNext gRPC call",
-      completed: true,
-    };
+    // ack successful receipt and broadcast back to the remote gRPC client
+    callback(null, { success: true, message: 'Menu update broadcasted to all tables.' });
 
-    callback(null, mockTodo);
+  } catch (error: any) {
+    callback({
+      code: grpc.status.INTERNAL,
+      details: `Failed to broadcast update: ${error.message}`
+    });
   }
-};
-
-function main() {
-  const server = new grpc.Server();
-  server.addService(todoProto.todopackage.TodoService.service, todoServiceImplementation);
-  
-  const address = '0.0.0.0:50051';
-  server.bindAsync(address, grpc.ServerCredentials.createInsecure(), (err, port) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    console.log(`TypeScript Server running on port ${port}`);
-  });
 }
 
-main();
+// start gRPC server
+const server = new grpc.Server();
+
+// bind the handler to the Proto service definition
+server.addService(menuProto.MenuService.service, {
+  SendMenuUpdate: sendMenuUpdateHandler
+});
+
+if (GRPC_PORT) {
+  server.bindAsync(GRPC_PORT, grpc.ServerCredentials.createInsecure(), (err, boundPort) => {
+    if (err) {
+      console.error(`gRPC Server failed to bind: ${err.message}`);
+      return;
+    }
+    console.log(`gRPC Server running on port ${boundPort}`);
+  });
+
+  // Start the WebSocket server
+  startWSServer(Number(WSS_PORT));
+}
+
