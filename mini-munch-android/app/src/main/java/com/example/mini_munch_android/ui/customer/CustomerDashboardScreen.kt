@@ -37,6 +37,11 @@ import com.example.mini_munch_android.ui.theme.MunchDarkerGrayBlue
 import com.example.mini_munch_android.ui.theme.MunchGrayBlue
 import com.example.mini_munch_android.ui.theme.MunchRed
 import com.example.mini_munch_android.ui.theme.MunchTurquoise
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.example.mini_munch_android.utility.NotificationHelper.showOrderReadyNotification
 import java.util.Locale
 
 // customer dashboard page, forwarding customer actions to the viewmodel
@@ -46,8 +51,25 @@ fun CustomerDashboardScreen(
     viewModel: CustomerViewModel,
     onLeaveTable: () -> Unit
 ) {
+    // context for notifications
+    val context = LocalContext.current
+
     // collect ui state from viewmodel
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // derive order status from ui state
+    val orderStatus = uiState.order?.status
+
+    // track if notification has already been shown for this order
+    var hasNotifiedReady by remember(uiState.order?.id) { mutableStateOf(false) }
+
+    // trigger notification when order status becomes ready (if notification has not already been shown)
+    LaunchedEffect(orderStatus) {
+        if (orderStatus == "READY" && !hasNotifiedReady) {
+            hasNotifiedReady = true
+            showOrderReadyNotification(context, tableNumber)
+        }
+    }
 
     // load dashboard information when the screen is opened
     LaunchedEffect(tableNumber) {
@@ -195,7 +217,7 @@ fun CustomerDashboardScreen(
                     items(
                         items = order.items,
                         key = { item -> "order_${item.menuItemId}" }
-                    ){ item ->
+                    ) { item ->
                         // card to handle order item manipulation and safe handling
                         OrderItemCard(
                             item = item,
