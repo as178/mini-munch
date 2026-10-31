@@ -69,7 +69,7 @@ fun TableInputScreen(viewModel: TableInputViewModel) {
             enabled = !uiState.isTableOccupied && !uiState.isLoading
         )
 
-        // display api errors so customer can retry
+        // display api errors so customer stays informed
         uiState.errorMessage?.let { errorMessage ->
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -104,7 +104,9 @@ fun TableInputScreen(viewModel: TableInputViewModel) {
                         "Table Occupied"
                     } else {
                         "Occupy Table"
-                    }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold
+                    },
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
