@@ -107,6 +107,18 @@ export async function startWSServer(WSS_PORT: number) {
         switch (type) {
           // Handle subscription event
           case 'subscribe':
+              // check if table is betwen 0 and 20 
+              if (numericTable < 0 || numericTable > 20) {
+              console.warn(`Invalid table, please select between 0 for staff and 1 - 20 for clients`);
+
+              // send error through ws
+              ws.send(JSON.stringify({ 
+                topic: 'error', 
+                payload: { message: `Invalid table, please select between 0 for staff and 1 - 20 for clients` }
+              }));
+              return; 
+            }
+
             // Table 0 is for staff, should receive all websocket data
             if (numericTable === 0) {
               addSubscription(numericTable, ws);
