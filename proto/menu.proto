@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package menu;
 
+// RPC method that remote services will call
 service MenuService {
-  // RPC method that remote services will call
   rpc SendMenuUpdate (MenuUpdateRequest) returns (MenuUpdateResponse);
 }
 

@@ -1,3 +1,4 @@
+import path from "path";
 import { orderServiceErrors } from "../errors/orderErrors";
 import {
   OrderModel,
@@ -12,7 +13,39 @@ import {
 } from "./menuItemService";
 import type { ServiceResult } from "./serviceResult";
 import { getTable, type TableServiceFailureReason } from "./tableService";
-import { sendDataToSelectTableWS } from "./wssService";
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
+
+// gRPC Client to connect to remote WebSocket server
+const WS_SERVER_ADDRESS = process.env.WS_SERVER_GRPC_ADDRESS; 
+
+//path to shared status proto file 
+const PROTO_PATH = path.resolve(import.meta.dirname, '../../proto/status.proto');
+
+// load proto definition
+const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+  keepCase: true, longs: String, enums: String, defaults: true, oneofs: true 
+});
+
+// laod and create and register fuctions with wss 
+const statusProto = grpc.loadPackageDefinition(packageDefinition).status as any;
+const wsGrpcClient = new statusProto.StatusService(WS_SERVER_ADDRESS, grpc.credentials.createInsecure());
+
+// function to handle async gRPC calls to send update to ws
+function broadcastToWebSockets(table: string, payload: object) {
+
+  wsGrpcClient.SendStatusUpdate({
+    json_payload: JSON.stringify({ table, ...payload })
+  }, (error: any, response: any) => {
+    // handle error
+    if (error) {
+      console.error('Failed to forward event to WS Server over gRPC:', error.message);
+      return;
+    }
+    // log success
+    console.log('Remote WS Server ack receipt:', response.message);
+  });
+}
 
 // defined type for the reasons specific to an order service function failure
 export type OrderServiceFailureReason =
@@ -300,9 +333,9 @@ export async function updateOrderStatus(
   if (orderTableInfo.table) {
     const table = orderTableInfo.table.tableNumber;
     
-    // send update to ws for that table
+    // send update to ws for that table by gRPC call
     if (table){
-      sendDataToSelectTableWS(
+      broadcastToWebSockets(
         String(table), 
         { 
           type: "order", 
@@ -363,9 +396,9 @@ export async function deleteOrder(
   // delete the order and return a successful result with no content
   await existingOrder.deleteOne();
     
-  // send update to ws for that table and staff
+  // send update to ws for that table and staff by gRPC call
   if (tableNumber !== undefined) {
-    sendDataToSelectTableWS(
+    broadcastToWebSockets(
       String(tableNumber),
       {
         type: "order",

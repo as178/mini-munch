@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package status;
+
+// RPC method that remote services will call
+service StatusService {
+  rpc SendStatusUpdate (StatusUpdateRequest) returns (StatusUpdateResponse);
+}
+
+// The request message containing the data you want to broadcast
+message StatusUpdateRequest {
+  string json_payload = 1;
+}
+
+// The response message sent back to the remote service
+message StatusUpdateResponse {
+  bool success = 1;
+  string message = 2;
+}
