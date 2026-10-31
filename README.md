@@ -2,7 +2,7 @@
 
 #### A bite-sized, distributed restaurant system. 🍽️🍔
 
-##### Final commit hash:
+##### Final commit hash (excluding updating the README file with this value + final merge): d7ef46a34301032eeae97d055201c8c6d2545d4a
 
 <hr style="margin: 30px 0;" />
 
