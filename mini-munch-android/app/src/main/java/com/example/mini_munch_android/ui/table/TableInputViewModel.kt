@@ -1,5 +1,6 @@
 package com.example.mini_munch_android.ui.table
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mini_munch_android.repository.TableRepository
@@ -33,7 +34,9 @@ class TableInputViewModel(
         if (!_uiState.value.isLoading && newTableNumber.all { char -> char.isDigit() }) {
             _uiState.update { currentState ->
                 currentState.copy(
-                    tableNumber = newTableNumber, isTableOccupied = false, errorMessage = null
+                    tableNumber = newTableNumber,
+                    isTableOccupied = false,
+                    errorMessage = null
                 )
             }
         }
@@ -55,7 +58,7 @@ class TableInputViewModel(
             return
         }
 
-        // launch coroutine to perform network request
+        // launch coroutine to update ui state and perform network request
         viewModelScope.launch {
             // set loading state to true and clear previous errors
             _uiState.update { state ->
@@ -81,6 +84,7 @@ class TableInputViewModel(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
+                Log.e("TableInputViewModel", "Failed to occupy table", exception)
                 // handle network or server errors
                 _uiState.update { state ->
                     state.copy(
@@ -91,5 +95,10 @@ class TableInputViewModel(
                 }
             }
         }
+    }
+
+    // resets table input state when returning from the customer dashboard
+    fun reset() {
+        _uiState.value = TableInputUiState()
     }
 }

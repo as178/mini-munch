@@ -382,7 +382,7 @@ export async function deleteOrder(
   orderId: string,
 ): Promise<ServiceResult<void, OrderFailureReason>> {
   // if the order does not exist, return a failure result with the appropriate reason
-  const existingOrder = await OrderModel.findById(orderId).populate<{ table: TableDocument }>("table");
+  const existingOrder = await OrderModel.findById(orderId);
   if (!existingOrder) {
     return { success: false, serviceError: orderServiceErrors.ORDER_NOT_FOUND };
   }

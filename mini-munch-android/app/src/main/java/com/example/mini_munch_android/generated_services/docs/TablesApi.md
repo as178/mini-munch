@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:5001*
 
 | Method | HTTP request | Description |
 | ------------- | ------------- | ------------- |
-| [**apiTablesTableNumberGet**](TablesApi.md#apiTablesTableNumberGet) | **GET** /api/tables/{tableNumber} | Retrieve a table by its number (currently not in use by the frontend client) |
+| [**apiTablesTableNumberGet**](TablesApi.md#apiTablesTableNumberGet) | **GET** /api/tables/{tableNumber} | Retrieve a table by its number (in use by the android client for table status checking) |
 | [**apiTablesTableNumberOccupyPatch**](TablesApi.md#apiTablesTableNumberOccupyPatch) | **PATCH** /api/tables/{tableNumber}/occupy | Occupy a table by its number |
 | [**apiTablesTableNumberReleasePatch**](TablesApi.md#apiTablesTableNumberReleasePatch) | **PATCH** /api/tables/{tableNumber}/release | Release a table from being occupied by its number |
 
@@ -13,7 +13,7 @@ All URIs are relative to *http://localhost:5001*
 # **apiTablesTableNumberGet**
 > ApiTablesTableNumberGet200Response apiTablesTableNumberGet(tableNumber)
 
-Retrieve a table by its number (currently not in use by the frontend client)
+Retrieve a table by its number (in use by the android client for table status checking)
 
 Retrieves the table document which includes the table ID, table number, and availability status, if successful.
 
