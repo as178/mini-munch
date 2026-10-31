@@ -1,0 +1,109 @@
+import protoLoader from '@grpc/proto-loader';
+import path from 'path';
+import { sendDataToAllTablesWS, sendDataToSelectTableWS, startWSServer } from './wssService.js';
+import dotenv from "dotenv";
+import grpc from '@grpc/grpc-js';
+
+// load environment variable from .env file
+dotenv.config();
+const { WSS_PORT, GRPC_URL } = process.env;
+
+// fucntion to send menu updates to all websockets
+function sendMenuUpdateHandler(call: any, callback: any) {
+  try {
+    const requestData = call.request;
+
+    // data back into an json object
+    const message = requestData.json_payload ? JSON.parse(requestData.json_payload) : requestData;
+
+    // send message to all websockets
+    sendDataToAllTablesWS(message);
+
+    // return ack for successful receipt and broadcast back to the remote gRPC client
+    callback(null, { success: true, message: 'Menu update broadcasted to all tables.' });
+
+  } catch (error: any) {
+    callback({
+      code: grpc.status.INTERNAL,
+      details: `Failed to broadcast update: ${error.message}`
+    });
+  }
+}
+
+function sendStatusUpdateHandler(call: any, callback: any) {
+  try {
+    const requestData = call.request;
+
+    // data back into an json object
+    const data = requestData.json_payload ? JSON.parse(requestData.json_payload) : requestData;
+
+    // extract table and payload
+    const { table, ...payload } = data;
+
+    // send data to relevant websockets 
+    sendDataToSelectTableWS(table , payload)
+
+    // return ack for successful receipt and broadcast back to the remote gRPC client
+    callback(null, { success: true, message: `Status update for table ${table} has been broadcast.` });
+
+  } catch (error: any) {
+    callback({
+      code: grpc.status.INTERNAL,
+      details: `Failed to broadcast update: ${error.message}`
+    });
+  }
+}
+
+// load the shared menu proto file 
+const MENU_PROTO_PATH = path.resolve(import.meta.dirname, '../proto/menu.proto');
+const menuPackageDefinition = protoLoader.loadSync(MENU_PROTO_PATH, {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+});
+
+// load the shared status proto file 
+const STATUS_PROTO_PATH = path.resolve(import.meta.dirname, '../proto/status.proto');
+const statusPackageDefinition = protoLoader.loadSync(STATUS_PROTO_PATH, {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+});
+
+// load fucntion definitions
+const menuProto = grpc.loadPackageDefinition(menuPackageDefinition).menu as any;
+const statusProto = grpc.loadPackageDefinition(statusPackageDefinition).status as any;
+
+// start gRPC server
+const server = new grpc.Server();
+
+// bind menu handler to the Proto service definition
+server.addService(menuProto.MenuService.service, {
+  SendMenuUpdate: sendMenuUpdateHandler
+});
+
+// bind status handler to the Proto service definition
+server.addService(statusProto.StatusService.service, {
+  SendStatusUpdate: sendStatusUpdateHandler
+});
+
+// if ports and url are loaded then bind and start wss
+if (GRPC_URL && WSS_PORT) {
+  // bind gRCP server to port
+  server.bindAsync(GRPC_URL, grpc.ServerCredentials.createInsecure(), (err, boundPort) => {
+    if (err) {
+      console.error(`gRPC Server failed to bind: ${err.message}`);
+      return;
+    }
+    console.log(`gRPC Server running on localhost:${boundPort}`);
+  });
+
+  // Start the WebSocket server
+  startWSServer(Number(WSS_PORT));
+} else {
+  console.error('Ports and url were unable to load');
+}

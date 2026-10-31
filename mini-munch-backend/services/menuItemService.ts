@@ -1,7 +1,40 @@
 import { menuItemServiceErrors } from "../errors/menuItemErrors";
 import { MenuItemModel, type MenuItemDocument } from "../models/MenuItem";
 import type { ServiceResult } from "./serviceResult";
-import { sendDataToAllTablesWS } from "../services/wssService";
+import path from "path";
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
+
+// gRPC Client to connect to remote WebSocket server
+const WS_SERVER_ADDRESS = process.env.WS_SERVER_GRPC_ADDRESS; 
+
+//path to shared menu proto file 
+const PROTO_PATH = path.resolve(import.meta.dirname, '../../proto/menu.proto');
+
+// load proto definition
+const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+  keepCase: true, longs: String, enums: String, defaults: true, oneofs: true 
+});
+
+// laod and create and register fuctions with wss 
+const menuProto = grpc.loadPackageDefinition(packageDefinition).menu as any;
+const wsGrpcClient = new menuProto.MenuService(WS_SERVER_ADDRESS, grpc.credentials.createInsecure());
+
+// function to handle async gRPC calls to send update to ws
+function broadcastToWebSockets(payload: object) {
+
+  wsGrpcClient.SendMenuUpdate({
+    json_payload: JSON.stringify(payload)
+  }, (error: any, response: any) => {
+    
+    // handle errors for service unavailable
+    if (error) {
+      console.error('Failed to forward event to WS Server over gRPC:', error.message);
+    }
+    // log success
+    console.log('Remote WS Server ack receipt:', response.message);
+  });
+}
 
 // defined type for the reasons a menu item service function can fail
 export type MenuItemServiceFailureReason =
@@ -96,8 +129,8 @@ export async function createMenuItem(
     price,
   });
 
-  // send update to WS to notify client to update
-  sendDataToAllTablesWS(
+  // send update to WS to notify client to update by gRPC call
+  broadcastToWebSockets(
     { 
       type: "menu",
       message: 'Menu Updated',
@@ -127,8 +160,8 @@ export async function deleteMenuItem(
   // delete the menu item document from the database
   await menuItemToBeDeleted.data.deleteOne();
 
-  // send update to WS to notify client of update
-  sendDataToAllTablesWS(
+  // send update to WS to notify client of update by gRPC call
+  broadcastToWebSockets(
     { 
       type: "menu",
       message: 'Menu Updated',
@@ -138,3 +171,4 @@ export async function deleteMenuItem(
   // return a success result with no content
   return { success: true, data: undefined };
 }
+

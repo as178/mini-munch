@@ -14,6 +14,7 @@
     "frontend-orval": "npx --prefix mini-munch-frontend orval --config ./mini-munch-frontend/orval.config.ts",
     "frontend-deploy": "npm --prefix mini-munch-frontend run build && npm --prefix mini-munch-frontend run preview",
     "backend": "npm --prefix mini-munch-backend run dev",
-    "install-all": "npm install --prefix mini-munch-backend && npm install --prefix mini-munch-frontend"
+    "ws": "npm --prefix mini-munch-ws run dev",
+    "install-all": "npm install --prefix mini-munch-backend && npm install --prefix mini-munch-frontend && npm install --prefix mini-munch-ws"
   }
 }

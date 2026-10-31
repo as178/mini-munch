@@ -8,11 +8,10 @@ import { errorMiddleware } from "./middleware/errorMiddleware";
 import tableRoutes from "./routes/tableRoutes";
 import menuItemRoutes from "./routes/menuItemRoutes";
 import orderRoutes from "./routes/orderRoutes";
-import { startWSServer } from "./services/wssService";
 
 // load environment variable from .env file
 dotenv.config();
-const { PORT, WSS_PORT } = process.env;
+const { PORT } = process.env;
 
 // create the express app
 const app: Application = express();
@@ -41,6 +40,3 @@ await connectToDatabase();
 app.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`server on http://localhost:${PORT}`);
 });
-
-// Start the WebSocket server
-startWSServer(Number(WSS_PORT));

@@ -1,5 +1,4 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { getTable } from "./tableService";
 
 // Map to keep track of topics (table numbers) mapped to a Set of sockets
 const subscriptions = new Map<number, Set<WebSocket>>();
@@ -108,6 +107,18 @@ export async function startWSServer(WSS_PORT: number) {
         switch (type) {
           // Handle subscription event
           case 'subscribe':
+              // check if table is betwen 0 and 20 
+              if (numericTable < 0 || numericTable > 20) {
+              console.warn(`Invalid table, please select between 0 for staff and 1 - 20 for clients`);
+
+              // send error through ws
+              ws.send(JSON.stringify({ 
+                topic: 'error', 
+                payload: { message: `Invalid table, please select between 0 for staff and 1 - 20 for clients` }
+              }));
+              return; 
+            }
+
             // Table 0 is for staff, should receive all websocket data
             if (numericTable === 0) {
               addSubscription(numericTable, ws);
@@ -124,27 +135,7 @@ export async function startWSServer(WSS_PORT: number) {
               return;
             }
 
-            // get table info for requeseted table
-            const tableServiceResult = await getTable(numericTable);
-
-            // Check if there was an error getting the table
-            if (!tableServiceResult.success) {
-              // log error
-              console.log(tableServiceResult.serviceError);
-
-              // send error thought ws 
-              ws.send(JSON.stringify({ 
-                topic: 'error', 
-                payload: { message: tableServiceResult.serviceError }
-              }));
-              return;
-            }       
-
-            // get table data
-            const table = tableServiceResult.data;
-
             // If table occupied, then register the web socket to the Set
-            if (!table.available){
               addSubscription(numericTable, ws);
               console.log(`Client subscribed to table: ${numericTable}`);
               
@@ -153,19 +144,8 @@ export async function startWSServer(WSS_PORT: number) {
                 topic: 'subscribed', 
                 payload: { 
                   topic: numericTable, 
-                  table: tableServiceResult.data
                 }
               }));
-            } else {
-              // error table is unoccupied, user should occupy table before subscribing
-              console.log(`Table ${numericTable} is unoccupied, can't bind ws`);
-
-              // send error through ws
-              ws.send(JSON.stringify({ 
-                topic: 'error', 
-                payload: { message: `Table ${numericTable} is unoccupied, can't bind ws` }
-              }));
-            }
             break; 
         
           // Handle un-subscription event

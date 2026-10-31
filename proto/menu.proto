@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package menu;
+
+// RPC method that remote services will call
+service MenuService {
+  rpc SendMenuUpdate (MenuUpdateRequest) returns (MenuUpdateResponse);
+}
+
+// The request message containing the data you want to broadcast
+message MenuUpdateRequest {
+  string json_payload = 1;
+}
+
+// The response message sent back to the remote service
+message MenuUpdateResponse {
+  bool success = 1;
+  string message = 2;
+}
