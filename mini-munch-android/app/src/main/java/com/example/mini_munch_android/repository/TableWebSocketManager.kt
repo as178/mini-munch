@@ -29,6 +29,7 @@ class TableWebSocketManager(
 
         // open new websocket connection and attach event listeners
         val webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            // invoked when the websocket connection is established
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 // format and send subscription json message matching backend wssService topic format
                 val subscribeJson = gson.toJson(
@@ -38,6 +39,8 @@ class TableWebSocketManager(
                     )
                 )
                 webSocket.send(subscribeJson)
+                // trigger an immediate order/status check upon connecting or reconnecting
+                trySend(WsPayload(type = "order", message = "Connected"))
             }
 
             // invoked when a text frame message is received from the websocket server

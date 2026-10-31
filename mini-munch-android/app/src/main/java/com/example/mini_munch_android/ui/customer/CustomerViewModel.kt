@@ -10,10 +10,13 @@ import com.example.mini_munch_android.repository.CustomerRepository
 import com.example.mini_munch_android.repository.TableWebSocketManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 // represents the ui state for customer screen
 data class CustomerUiState(
@@ -81,55 +84,57 @@ class CustomerViewModel(
         }
     }
 
-    // starts listening for real-time menu and order websocket updates while the dashboard is active
+    // starts listening for real-time menu and order websocket updates while the dashboard is active with automatic reconnection
     fun startWebSocketListener(tableNumber: Int) {
         if (webSocketJob?.isActive == true) return
 
         webSocketJob = viewModelScope.launch {
-            try {
-                webSocketManager.observeTableEvents(BuildConfig.API_WS_URL, tableNumber)
-                    .collect { payload ->
-                        // handle incoming websocket messages
-                        when (payload.type) {
-                            "menu" -> {
-                                // retrieve updated menu items and update ui
-                                try {
-                                    val menuItems = repository.getMenu()
-                                    _uiState.update { state ->
-                                        state.copy(menuItems = menuItems)
+            while (isActive) {
+                try {
+                    webSocketManager.observeTableEvents(BuildConfig.API_WS_URL, tableNumber)
+                        .collect { payload ->
+                            // handle incoming websocket messages
+                            when (payload.type) {
+                                "menu" -> {
+                                    // retrieve updated menu items and update ui
+                                    try {
+                                        val menuItems = repository.getMenu()
+                                        _uiState.update { state ->
+                                            state.copy(menuItems = menuItems)
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.w("CustomerViewModel", "Failed to refresh menu items from websocket event", e)
                                     }
-                                } catch (e: Exception) {
-                                    Log.w("CustomerViewModel", "Failed to refresh menu items from websocket event", e)
                                 }
-                            }
-                            "order" -> {
-                                // retrieve updated order and update ui
-                                val currentOrder = _uiState.value.order
-                                try {
-                                    // check if staff has discarded the order and the customer is "kicked off"
-                                    val isKickedOff = repository.checkTableStatus(tableNumber, currentOrder?.id)
-                                    if (isKickedOff) {
-                                        _uiState.update { state ->
-                                            state.copy(hasLeftTable = true)
+                                "order" -> {
+                                    // retrieve updated order and update ui
+                                    val currentOrder = _uiState.value.order
+                                    try {
+                                        // check if staff has discarded the order and the customer is "kicked off"
+                                        val isKickedOff = repository.checkTableStatus(tableNumber, currentOrder?.id)
+                                        if (isKickedOff) {
+                                            _uiState.update { state ->
+                                                state.copy(hasLeftTable = true)
+                                            }
+                                        } else if (currentOrder != null) {
+                                            // else, retrieve updated order and update ui
+                                            val order = repository.getOrder(tableNumber)
+                                            _uiState.update { state ->
+                                                state.copy(order = order)
+                                            }
                                         }
-                                    } else if (currentOrder != null) {
-                                        // else, retrieve updated order and update ui
-                                        val order = repository.getOrder(tableNumber)
-                                        _uiState.update { state ->
-                                            state.copy(order = order)
-                                        }
+                                    } catch (e: Exception) {
+                                        Log.w("CustomerViewModel", "Failed to refresh order from websocket event", e)
                                     }
-                                } catch (e: Exception) {
-                                    Log.w("CustomerViewModel", "Failed to refresh order from websocket event", e)
                                 }
                             }
                         }
-                    }
-            } catch (exception: CancellationException) {
-                // handle cancellation of websocket listener
-                throw exception
-            } catch (exception: Exception) {
-                Log.w("CustomerViewModel", "Error in websocket collection stream for table $tableNumber", exception)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    Log.w("CustomerViewModel", "WebSocket connection lost or failed. Reconnecting in 3 seconds...", exception)
+                    delay(3.seconds) // wait 3 seconds before attempting reconnection
+                }
             }
         }
     }
