@@ -37,10 +37,14 @@ function broadcastToWebSockets(table: string, payload: object) {
   wsGrpcClient.SendStatusUpdate({
     json_payload: JSON.stringify({ table, ...payload })
   }, (error: any, response: any) => {
-    // handle error
-    if (error) {
+    
+    // handle errors for timeout or service unavailable
+    if (error.code === grpc.status.DEADLINE_EXCEEDED) {
+      console.error('gRPC call timed out:', error.message);
+    } else if (error.code === grpc.status.UNAVAILABLE) {
+      console.error('gRPC service is unavailable:', error.message);
+    } else {
       console.error('Failed to forward event to WS Server over gRPC:', error.message);
-      return;
     }
     // log success
     console.log('Remote WS Server ack receipt:', response.message);
