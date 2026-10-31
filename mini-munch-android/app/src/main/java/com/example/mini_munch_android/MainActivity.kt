@@ -50,13 +50,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        // start foreground service when app goes to background if a table session is active
-        val tableNumber = getTableNumber(this)
-        if (tableNumber != null) {
-            val serviceIntent = Intent(this, OrderForegroundService::class.java).apply {
-                putExtra(OrderForegroundService.EXTRA_TABLE_NUMBER, tableNumber)
+        // start foreground service when app goes to background if a table session is active (ignore configuration changes like screen rotation)
+        if (!isChangingConfigurations) {
+            val tableNumber = getTableNumber(this)
+            if (tableNumber != null) {
+                val serviceIntent = Intent(this, OrderForegroundService::class.java).apply {
+                    putExtra(OrderForegroundService.EXTRA_TABLE_NUMBER, tableNumber)
+                }
+                ContextCompat.startForegroundService(this, serviceIntent)
             }
-            ContextCompat.startForegroundService(this, serviceIntent)
         }
     }
 }
