@@ -41,6 +41,7 @@ function broadcastToWebSockets(table: string, payload: object) {
     // handle errors for service unavailable
     if (error) {
       console.error('Failed to forward event to WS Server over gRPC:', error.message);
+      return;
     }
     // log success
     console.log('Remote WS Server ack receipt:', response.message);
