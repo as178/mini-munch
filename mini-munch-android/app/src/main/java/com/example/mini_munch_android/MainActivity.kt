@@ -1,9 +1,13 @@
 package com.example.mini_munch_android
 
+import android.Manifest.permission.POST_NOTIFICATIONS
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +43,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MiniMunchApp() {
     val context = LocalContext.current
+
+    // request notifications permission on android 13+ when app opens
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val permissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { _ -> }
+        LaunchedEffect(Unit) {
+            permissionLauncher.launch(POST_NOTIFICATIONS)
+        }
+    }
+
+    // variables for navigation and session management
     val savedTableNumber = remember { getTableNumber(context) }
     val navController = rememberNavController()
     val tableInputViewModel: TableInputViewModel = viewModel()
@@ -49,6 +65,7 @@ fun MiniMunchApp() {
         "table-input"
     }
 
+    // navigation setup
     NavHost(
         navController = navController,
         startDestination = startDestination
