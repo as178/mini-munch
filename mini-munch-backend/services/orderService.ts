@@ -39,9 +39,7 @@ function broadcastToWebSockets(table: string, payload: object) {
   }, (error: any, response: any) => {
     
     // handle errors for service unavailable
-    if (error.code === grpc.status.UNAVAILABLE) {
-      console.error('gRPC service is unavailable:', error.message);
-    } else {
+    if (error) {
       console.error('Failed to forward event to WS Server over gRPC:', error.message);
     }
     // log success
