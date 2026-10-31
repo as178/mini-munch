@@ -1,6 +1,7 @@
 package com.example.mini_munch_android
 
 import android.Manifest.permission.POST_NOTIFICATIONS
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +25,7 @@ import androidx.navigation.navArgument
 import com.example.mini_munch_android.utility.TableSessionManager.clearTableNumber
 import com.example.mini_munch_android.utility.TableSessionManager.getTableNumber
 import com.example.mini_munch_android.utility.TableSessionManager.saveTableNumber
+import com.example.mini_munch_android.utility.OrderForegroundService
 import com.example.mini_munch_android.ui.customer.CustomerDashboardScreen
 import com.example.mini_munch_android.ui.customer.CustomerViewModel
 import com.example.mini_munch_android.ui.table.TableInputViewModel
@@ -35,6 +38,25 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MiniMunchApp()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // stop foreground service when app is in foreground, letting the customer viewmodel to handle the websocket
+        val serviceIntent = Intent(this, OrderForegroundService::class.java)
+        stopService(serviceIntent)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // start foreground service when app goes to background if a table session is active
+        val tableNumber = getTableNumber(this)
+        if (tableNumber != null) {
+            val serviceIntent = Intent(this, OrderForegroundService::class.java).apply {
+                putExtra(OrderForegroundService.EXTRA_TABLE_NUMBER, tableNumber)
+            }
+            ContextCompat.startForegroundService(this, serviceIntent)
         }
     }
 }
