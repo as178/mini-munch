@@ -57,7 +57,7 @@ All URIs are relative to *http://localhost:5001*
 | *OrdersApi* | [**apiOrdersIdStatusPatch**](docs/OrdersApi.md#apiordersidstatuspatch) | **PATCH** /api/orders/{id}/status | Update an order status |
 | *OrdersApi* | [**apiOrdersPost**](docs/OrdersApi.md#apiorderspost) | **POST** /api/orders | Create a DRAFT status order |
 | *OrdersApi* | [**apiOrdersTableTableNumberGet**](docs/OrdersApi.md#apiorderstabletablenumberget) | **GET** /api/orders/table/{tableNumber} | Get the order for a table |
-| *TablesApi* | [**apiTablesTableNumberGet**](docs/TablesApi.md#apitablestablenumberget) | **GET** /api/tables/{tableNumber} | Retrieve a table by its number (currently not in use by the frontend client) |
+| *TablesApi* | [**apiTablesTableNumberGet**](docs/TablesApi.md#apitablestablenumberget) | **GET** /api/tables/{tableNumber} | Retrieve a table by its number (in use by the android client for table status checking) |
 | *TablesApi* | [**apiTablesTableNumberOccupyPatch**](docs/TablesApi.md#apitablestablenumberoccupypatch) | **PATCH** /api/tables/{tableNumber}/occupy | Occupy a table by its number |
 | *TablesApi* | [**apiTablesTableNumberReleasePatch**](docs/TablesApi.md#apitablestablenumberreleasepatch) | **PATCH** /api/tables/{tableNumber}/release | Release a table from being occupied by its number |
 

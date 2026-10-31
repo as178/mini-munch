@@ -55,7 +55,7 @@ open class TablesApi(basePath: kotlin.String = defaultBasePath, client: Call.Fac
 
     /**
      * GET /api/tables/{tableNumber}
-     * Retrieve a table by its number (currently not in use by the frontend client)
+     * Retrieve a table by its number (in use by the android client for table status checking)
      * Retrieves the table document which includes the table ID, table number, and availability status, if successful.
      * @param tableNumber The number of the table to retrieve.
      * @return ApiTablesTableNumberGet200Response
@@ -87,7 +87,7 @@ open class TablesApi(basePath: kotlin.String = defaultBasePath, client: Call.Fac
 
     /**
      * GET /api/tables/{tableNumber}
-     * Retrieve a table by its number (currently not in use by the frontend client)
+     * Retrieve a table by its number (in use by the android client for table status checking)
      * Retrieves the table document which includes the table ID, table number, and availability status, if successful.
      * @param tableNumber The number of the table to retrieve.
      * @return ApiResponse<ApiTablesTableNumberGet200Response?>
