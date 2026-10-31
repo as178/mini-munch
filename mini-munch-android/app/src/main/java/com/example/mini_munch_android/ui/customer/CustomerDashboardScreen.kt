@@ -11,10 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -22,9 +18,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,11 +38,9 @@ import com.example.mini_munch_android.ui.theme.MunchDarkerGrayBlue
 import com.example.mini_munch_android.ui.theme.MunchGrayBlue
 import com.example.mini_munch_android.ui.theme.MunchRed
 import com.example.mini_munch_android.ui.theme.MunchTurquoise
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import com.example.mini_munch_android.utility.NotificationHelper.showOrderReadyNotification
+import com.example.mini_munch_android.utility.TableSessionManager.getLastNotifiedOrderId
+import com.example.mini_munch_android.utility.TableSessionManager.setLastNotifiedOrderId
 import java.util.Locale
 
 // customer dashboard page, forwarding customer actions to the viewmodel
@@ -60,14 +59,16 @@ fun CustomerDashboardScreen(
     // derive order status from ui state
     val orderStatus = uiState.order?.status
 
-    // track if notification has already been shown for this order
-    var hasNotifiedReady by remember(uiState.order?.id) { mutableStateOf(false) }
-
-    // trigger notification when order status becomes ready (if notification has not already been shown)
-    LaunchedEffect(orderStatus) {
-        if (orderStatus == "READY" && !hasNotifiedReady) {
-            hasNotifiedReady = true
-            showOrderReadyNotification(context, tableNumber)
+    // trigger notification when order status becomes ready using shared preferences as single source of truth
+    LaunchedEffect(orderStatus, uiState.order?.id) {
+        val orderId = uiState.order?.id
+        if (orderStatus == "READY" && orderId != null) {
+            // ensure to update the last notified order id in shared preferences
+            val lastNotifiedId = getLastNotifiedOrderId(context)
+            if (lastNotifiedId != orderId) {
+                setLastNotifiedOrderId(context, orderId)
+                showOrderReadyNotification(context, tableNumber)
+            }
         }
     }
 
