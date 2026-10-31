@@ -3,7 +3,9 @@ package com.example.mini_munch_android.utility
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.app.PendingIntent.getActivity
 import android.app.Service
 import android.content.Intent
 import android.os.Build
@@ -13,6 +15,10 @@ import androidx.core.app.NotificationCompat
 import com.example.mini_munch_android.BuildConfig
 import com.example.mini_munch_android.MainActivity
 import com.example.mini_munch_android.repository.CustomerRepository
+import com.example.mini_munch_android.utility.NotificationHelper.showOrderReadyNotification
+import com.example.mini_munch_android.utility.TableSessionManager.clearTableNumber
+import com.example.mini_munch_android.utility.TableSessionManager.getLastNotifiedOrderId
+import com.example.mini_munch_android.utility.TableSessionManager.setLastNotifiedOrderId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -78,11 +84,11 @@ class OrderForegroundService : Service() {
     // builds ongoing notification displayed while background service is running
     private fun createServiceNotification(tableNumber: Int): Notification {
         val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
+        val pendingIntent = getActivity(
             this,
             0,
             notificationIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
@@ -98,8 +104,6 @@ class OrderForegroundService : Service() {
     // starts background websocket listener and checks order status when events occur, applies 3-second delay on reconnections
     private fun startBackgroundOrderListener(tableNumber: Int) {
         serviceScope.launch {
-            var hasNotifiedReady = false
-
             while (isActive) {
                 try {
                     webSocketManager.observeTableEvents(BuildConfig.API_WS_URL, tableNumber)
@@ -107,11 +111,25 @@ class OrderForegroundService : Service() {
                             if (payload.type == "order") {
                                 try {
                                     val order = repository.getOrder(tableNumber)
-                                    if (order.status == "READY" && !hasNotifiedReady) {
-                                        hasNotifiedReady = true
-                                        NotificationHelper.showOrderReadyNotification(applicationContext, tableNumber)
+
+                                    // check if order is ready and notify user, ensuring to update the last notified order id in shared preferences
+                                    if (order.status == "READY") {
+                                        val lastNotifiedId = getLastNotifiedOrderId(applicationContext)
+                                        if (lastNotifiedId != order.id) {
+                                            setLastNotifiedOrderId(applicationContext, order.id)
+                                            showOrderReadyNotification(applicationContext, tableNumber)
+                                        }
                                     }
                                 } catch (e: Exception) {
+                                    val errorCode = getErrorCode(e)
+
+                                    // handle order not found and staff discarding the order, ensuring to clear the session state in shared preferences + cleanly stop the service
+                                    if (errorCode == "ORDER_NOT_FOUND" || e.message?.contains("404") == true) {
+                                        Log.i("OrderForegroundService", "Order discarded or not found. Stopping foreground service.")
+                                        clearTableNumber(applicationContext)
+                                        stopSelf()
+                                        return@collect
+                                    }
                                     Log.w("OrderForegroundService", "Failed to check order status from background websocket", e)
                                 }
                             }
