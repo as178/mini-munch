@@ -14,6 +14,8 @@ import com.example.mini_munch_android.generated_services.models.ApiOrdersIdItems
 import com.example.mini_munch_android.generated_services.models.ApiOrdersIdStatusPatchRequest
 import com.example.mini_munch_android.generated_services.models.ApiOrdersPostRequest
 import com.example.mini_munch_android.generated_services.models.Order
+import com.example.mini_munch_android.utility.apiCall
+import com.example.mini_munch_android.utility.getErrorCode
 
 // handles communication with the customer menu, order, and table apis
 class CustomerRepository {

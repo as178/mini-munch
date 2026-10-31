@@ -3,6 +3,7 @@ package com.example.mini_munch_android.repository
 import com.example.mini_munch_android.BuildConfig
 import com.example.mini_munch_android.data.Table
 import com.example.mini_munch_android.generated_services.apis.TablesApi
+import com.example.mini_munch_android.utility.apiCall
 
 // handles communication with the table api
 class TableRepository {

@@ -1,4 +1,4 @@
-package com.example.mini_munch_android.repository
+package com.example.mini_munch_android.utility
 
 import android.content.Context
 import androidx.core.content.edit

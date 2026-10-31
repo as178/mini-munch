@@ -7,7 +7,7 @@ import com.example.mini_munch_android.BuildConfig
 import com.example.mini_munch_android.data.CustomerMenuItem
 import com.example.mini_munch_android.data.CustomerOrder
 import com.example.mini_munch_android.repository.CustomerRepository
-import com.example.mini_munch_android.repository.TableWebSocketManager
+import com.example.mini_munch_android.utility.TableWebSocketManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

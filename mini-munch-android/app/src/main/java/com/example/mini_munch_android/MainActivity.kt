@@ -16,9 +16,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.mini_munch_android.repository.TableSessionManager.clearTableNumber
-import com.example.mini_munch_android.repository.TableSessionManager.getTableNumber
-import com.example.mini_munch_android.repository.TableSessionManager.saveTableNumber
+import com.example.mini_munch_android.utility.TableSessionManager.clearTableNumber
+import com.example.mini_munch_android.utility.TableSessionManager.getTableNumber
+import com.example.mini_munch_android.utility.TableSessionManager.saveTableNumber
 import com.example.mini_munch_android.ui.customer.CustomerDashboardScreen
 import com.example.mini_munch_android.ui.customer.CustomerViewModel
 import com.example.mini_munch_android.ui.table.TableInputViewModel
